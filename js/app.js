@@ -4,7 +4,6 @@
  */
 
 // Import all necessary modules
-import { setupThreeJS, animate as animateVisualization } from './visualization.js';
 import { setupAudio, updateSynths } from './audio.js';
 import { setupHandTracking, setupWebcamElements } from './handTracking.js';
 import { createUI, updateUI } from './ui.js';
@@ -22,10 +21,7 @@ function init() {
   
   // Hide preloader after a short delay
   hidePreloader();
-  
-  // Setup THREE.js scene
-  setupThreeJS();
-  
+
   // Create UI
   createUI();
   
@@ -34,9 +30,6 @@ function init() {
   
   // Start hand tracking
   setupHandTracking();
-  
-  // Start animation loop
-  animate();
   
   // Wait for Tone.js to be ready before adding the button
   if (typeof Tone !== 'undefined') {
@@ -132,17 +125,8 @@ function addStartAudioButton() {
   });
 }
 
-// Animation loop that coordinates all animations
-function animate() {
-  requestAnimationFrame(animate);
-  
-  // Run the visualization animation
-  animateVisualization();
-}
-
 // Export globals and functions for other modules
 export {
   init,
-  addStartAudioButton,
-  animate
+  addStartAudioButton
 };

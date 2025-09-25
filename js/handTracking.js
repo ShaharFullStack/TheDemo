@@ -6,7 +6,6 @@
 import { calculateDistance, showMessage } from './utils.js';
 import { getNoteFromPosition, getChordFromPosition } from './musicTheory.js';
 import { playMelodyNote, playChord, stopMelody, stopChord, setVolume } from './audio.js';
-import { drawNoteGrid } from './ui.js';
 
 // Hand tracking variables
 let hands;
@@ -171,10 +170,6 @@ function onHandResults(results) {
     canvasCtx.save();
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-    // Draw the note grid - simplified on low-performance devices
-    if (!isLowPerformanceDevice || now % 3 === 0) { // Draw grid less frequently on low-end devices
-        drawNoteGrid(canvasCtx, canvasElement.width, canvasElement.height);
-    }
 
     // Process detected hands
     if (handDetected) {
@@ -200,8 +195,9 @@ function onHandResults(results) {
                         const indexTip = landmarks[8];
                         const pinchDist = calculateDistance(thumbTip, indexTip);
 
-                        // Volume control with pinch distance
-                        setVolume('left', pinchDist);
+                        // Volume control based on horizontal distance from center
+                        const distanceFromCenter = Math.abs(wrist.x - 0.5);
+                        setVolume('left', distanceFromCenter, pinchDist);
 
                         // Get chord based on hand height
                         const chord = getChordFromPosition(wrist.y);
@@ -227,20 +223,33 @@ function onHandResults(results) {
                                 (wrist.y * canvasElement.height) - 30);
                         }
 
-                        // FIXED: Visual feedback for volume (pinch) - inverted (pinch = soft, open = loud)
+                        // Visual feedback for volume (distance from center) and effects (pinch)
                         // Simplify visuals on low-performance devices
                         if (!isLowPerformanceDevice) {
-                            const volumeLevel = mapRange(pinchDist, 0.01, 0.1, 0, 1);
+                            const volumeLevel = mapRange(distanceFromCenter, 0, 0.5, 0, 1);
+                            const effectLevel = mapRange(pinchDist, 0.01, 0.1, 1, 0);
+
+                            // Volume indicator (distance from center)
                             canvasCtx.beginPath();
                             canvasCtx.arc(
-                                (thumbTip.x + indexTip.x) / 2 * canvasElement.width,
-                                (thumbTip.y + indexTip.y) / 2 * canvasElement.height,
-                                20 * volumeLevel, 0, Math.PI * 2
+                                wrist.x * canvasElement.width,
+                                wrist.y * canvasElement.height,
+                                30 * volumeLevel, 0, Math.PI * 2
                             );
                             canvasCtx.fillStyle = `rgba(200, 55, 100, ${volumeLevel})`;
                             canvasCtx.fill();
 
-                            // Draw a line connecting thumb and index finger
+                            // Effect indicator (pinch distance)
+                            canvasCtx.beginPath();
+                            canvasCtx.arc(
+                                (thumbTip.x + indexTip.x) / 2 * canvasElement.width,
+                                (thumbTip.y + indexTip.y) / 2 * canvasElement.height,
+                                15 * effectLevel, 0, Math.PI * 2
+                            );
+                            canvasCtx.fillStyle = `rgba(100, 255, 100, ${effectLevel})`;
+                            canvasCtx.fill();
+
+                            // Draw a line connecting thumb and index finger for effect control
                             canvasCtx.beginPath();
                             canvasCtx.moveTo(thumbTip.x * canvasElement.width, thumbTip.y * canvasElement.height);
                             canvasCtx.lineTo(indexTip.x * canvasElement.width, indexTip.y * canvasElement.height);
@@ -266,8 +275,9 @@ function onHandResults(results) {
                         const indexTip = landmarks[8];
                         const pinchDist = calculateDistance(thumbTip, indexTip);
 
-                        // Volume control with pinch distance
-                        setVolume('right', pinchDist);
+                        // Volume control based on horizontal distance from center
+                        const distanceFromCenter = Math.abs(wrist.x - 0.5);
+                        setVolume('right', distanceFromCenter, pinchDist);
 
                         // Get melody note based on hand height
                         const note = getNoteFromPosition(wrist.y, 'major');
@@ -287,20 +297,33 @@ function onHandResults(results) {
                                 (wrist.y * canvasElement.height) - 30);
                         }
 
-                        // FIXED: Visual feedback for volume (pinch) - inverted (pinch = soft, open = loud)
+                        // Visual feedback for volume (distance from center) and effects (pinch)
                         // Simplify visuals on low-performance devices
                         if (!isLowPerformanceDevice) {
-                            const volumeLevel = mapRange(pinchDist, 0.01, 0.1, 0, 1);
+                            const volumeLevel = mapRange(distanceFromCenter, 0, 0.5, 0, 1);
+                            const effectLevel = mapRange(pinchDist, 0.01, 0.1, 1, 0);
+
+                            // Volume indicator (distance from center)
                             canvasCtx.beginPath();
                             canvasCtx.arc(
-                                (thumbTip.x + indexTip.x) / 2 * canvasElement.width,
-                                (thumbTip.y + indexTip.y) / 2 * canvasElement.height,
-                                20 * volumeLevel, 0, Math.PI * 2
+                                wrist.x * canvasElement.width,
+                                wrist.y * canvasElement.height,
+                                30 * volumeLevel, 0, Math.PI * 2
                             );
                             canvasCtx.fillStyle = `rgba(100, 100, 255, ${volumeLevel})`;
                             canvasCtx.fill();
 
-                            // Draw a line connecting thumb and index finger
+                            // Effect indicator (pinch distance)
+                            canvasCtx.beginPath();
+                            canvasCtx.arc(
+                                (thumbTip.x + indexTip.x) / 2 * canvasElement.width,
+                                (thumbTip.y + indexTip.y) / 2 * canvasElement.height,
+                                15 * effectLevel, 0, Math.PI * 2
+                            );
+                            canvasCtx.fillStyle = `rgba(255, 100, 255, ${effectLevel})`;
+                            canvasCtx.fill();
+
+                            // Draw a line connecting thumb and index finger for effect control
                             canvasCtx.beginPath();
                             canvasCtx.moveTo(thumbTip.x * canvasElement.width, thumbTip.y * canvasElement.height);
                             canvasCtx.lineTo(indexTip.x * canvasElement.width, indexTip.y * canvasElement.height);

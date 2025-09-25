@@ -8,15 +8,19 @@ import { mapRange, showMessage } from './utils.js';
 import { updateNoteDisplay } from './ui.js';
 
 // Audio variables
-let melodySynth, harmonySynth, filter, reverb;
+let melodySynth, harmonySynth, filter, reverb, delay;
 let leftHandIsPlaying = false;
 let rightHandIsPlaying = false;
 let currentMelodyNote = null;
 let currentChord = null;
-let leftHandVolume = -10; // Default volume
-let rightHandVolume = -10; // Default volume
+let leftHandVolume = 0; // Default volume (higher)
+let rightHandVolume = 0; // Default volume (higher)
 let lastMelodyNote = null;
 let lastChord = null;
+
+// Effect variables
+let lastEffectChangeTime = 0;
+const EFFECT_CHANGE_THRESHOLD = 80; // 80ms minimum between effect changes
 
 // Time tracking for animation
 let noteChangeTime = 0;
@@ -30,17 +34,27 @@ function setupAudio() {
 
   // Create a limiter to prevent audio clipping
   const limiter = new Tone.Limiter(-3).toDestination();
-  
+
   // Improve overall sound with slightly deeper reverb and a gentle compressor
   const compressor = new Tone.Compressor(-12, 3).toDestination();
-  
+
+  // Create reverb and delay effects
   reverb = new Tone.Reverb({
-    decay: 2.0,
-    wet: 0.3,
-    preDelay: 0.07,
+    decay: 1.5,
+    wet: 0,  // Start with dry signal, will be controlled by pinch
+    preDelay: 0.05,
   });
   reverb.generate(); // Generate the reverb impulse
-  limiter.connect(reverb);  
+
+  delay = new Tone.PingPongDelay({
+    delayTime: "8n",
+    feedback: 0,  // Start with no feedback, will be controlled by pinch
+    wet: 0       // Start with dry signal, will be controlled by pinch
+  });
+
+  limiter.connect(delay);
+  delay.connect(reverb);
+  reverb.connect(compressor);
 
   filter = new Tone.Filter({
     type: "lowpass",
@@ -48,10 +62,9 @@ function setupAudio() {
     Q: 0.5,            // Reduced from 1 for smoother filtering
     rolloff: -12       // Gentler rolloff for more natural sound
   });
-  
+
   // Connect filter after it's defined
-  filter.connect(reverb);
-  reverb.connect(compressor);
+  filter.connect(delay);
   
   // Create synths with optimized settings
   melodySynth = new Tone.Synth({
@@ -345,26 +358,56 @@ function stopChord() {
   }
 }
 
-// Set volume based on pinch distance - INVERTED: pinch = soft, open hand = loud
-function setVolume(hand, pinchDistance) {
+// Set volume based on distance from center and effects based on pinch distance
+function setVolume(hand, distanceFromCenter, pinchDistance) {
   if (!window.audioStarted) return; // Only adjust volume if audio is started
-  
-  // Map pinch distance to volume (closer fingers = softer)
-  const volume = mapRange(pinchDistance, MIN_PINCH_DIST, MAX_PINCH_DIST, -70, -15);
-  
+
+  // Map distance from center to volume (center = soft, edges = loud)
+  const volume = mapRange(distanceFromCenter, 0, 0.5, -30, 5);
+
+  // Set volume for the appropriate hand
   if (hand === 'left') {
     leftHandVolume = volume;
     if (harmonySynth) {
       harmonySynth.volume.value = volume;
     }
-    // console.log("Left hand volume:", volume);
   } else {
     rightHandVolume = volume;
     if (melodySynth) {
       melodySynth.volume.value = volume;
     }
-    // console.log("Right hand volume:", volume);
   }
+
+  // Control effects with pinch distance (with throttling to prevent noise)
+  setEffects(pinchDistance);
+}
+
+// Set reverb and delay effects based on pinch distance with sensitivity control
+function setEffects(pinchDistance) {
+  if (!window.audioStarted || !reverb || !delay) return;
+
+  const now = Date.now();
+
+  // Throttle effect changes to prevent audio artifacts
+  if (now - lastEffectChangeTime < EFFECT_CHANGE_THRESHOLD) {
+    return;
+  }
+
+  lastEffectChangeTime = now;
+
+  // Map pinch distance to effect intensity (pinched = more effect)
+  const effectIntensity = mapRange(pinchDistance, MIN_PINCH_DIST, MAX_PINCH_DIST, 1, 0);
+
+  // Apply reverb
+  const reverbWet = effectIntensity * 0.4; // Max 40% wet signal
+  reverb.wet.rampTo(reverbWet, 0.1);
+
+  // Apply delay
+  const delayWet = effectIntensity * 0.3; // Max 30% wet signal
+  const delayFeedback = effectIntensity * 0.4; // Max 40% feedback
+
+  delay.wet.rampTo(delayWet, 0.1);
+  delay.feedback.rampTo(delayFeedback, 0.1);
 }
 
 // Export audio functions and variables
@@ -376,6 +419,7 @@ export {
   stopMelody,
   stopChord,
   setVolume,
+  setEffects,
   melodySynth,
   harmonySynth,
   leftHandIsPlaying,

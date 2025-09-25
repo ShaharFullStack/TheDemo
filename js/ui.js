@@ -123,41 +123,6 @@ function createUI() {
 }
 
 
-// Create keys for each note in the selected scale across 2 octaves
-const keyCount = 16; // Two octaves of keys
-
-for (let i = 0; i < keyCount; i++) {
-    const key = document.createElement('div');
-    key.className = 'key';
-
-    // FIXED: Apply inverted mapping (higher = higher pitch)
-    const y = mapRange(i, 0, keyCount, 1.0, 0.0);
-    const note = getNoteFromPosition(y, selectedScale);
-
-    key.dataset.note = note;
-
-}
-
-// Highlight active keys
-if (currentMelodyNote && rightHandIsPlaying) {
-    // Find the matching key for the current melody note
-    keys.forEach(key => {
-        if (key.dataset.note === currentMelodyNote) {
-            key.classList.add('active');
-        }
-    });
-}
-
-if (currentChord && leftHandIsPlaying) {
-    // Find keys for each note in the chord
-    currentChord.notes.forEach(chordNote => {
-        keys.forEach(key => {
-            if (key.dataset.note === chordNote) {
-                key.classList.add('active');
-            }
-        });
-    });
-}
 
 
 
@@ -166,11 +131,12 @@ function createInstructionsPanel() {
     const instructionsEl = document.createElement('div');
     instructionsEl.id = 'instructions';
     instructionsEl.innerHTML = `
-    <h2>Instructions</h2> 
+    <h2>Instructions</h2>
     <p>Move your hands to play music!</p>
     <p>Right hand: Play melody notes</p>
     <p>Left hand: Play chords</p>
-    <p>Pinch gesture: Control volume</p>
+    <p>Hand distance from center: Control volume</p>
+    <p>Pinch gesture: Control reverb + delay effects</p>
     <p>Select scale and sound from the UI</p>
     <p>Press 'Start Audio' to begin</p>
   `;
@@ -233,41 +199,6 @@ function updateNoteDisplay() {
     noteEl.className = 'note-indicator' + ((leftHandIsPlaying || rightHandIsPlaying) ? ' playing' : '');
 }
 
-// FIXED: Improved note grid drawing for inverted direction
-function drawNoteGrid(ctx, canvasWidth, canvasHeight) {
-    const gridLines = 16; // Two octaves
-
-    ctx.save();
-
-    // Draw horizontal lines for the notes
-    for (let i = 0; i <= gridLines; i++) {
-        // FIXED: Distribute grid lines across full screen height
-        const y = mapRange(i, 0, gridLines, 0.05, 0.95) * canvasHeight;
-
-        // Change style for the center dividing line (between octaves)
-        if (i === 7) {
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.lineWidth = 2;
-        } else {
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.lineWidth = 1;
-        }
-
-        // Draw the line
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvasWidth, y);
-        ctx.stroke();
-
-        // Draw note labels
-        if (i < gridLines) { // Don't draw label for the last line
-            ctx.font = '12px Arial';
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        }
-    }
-
-    ctx.restore();
-}
 
 // Update UI elements when scale or root changes
 function updateUI() {
@@ -310,7 +241,6 @@ export {
     createUI,
     updateUI,
     updateNoteDisplay,
-    drawNoteGrid,
     setPlayingState,
     showMessage
 };
