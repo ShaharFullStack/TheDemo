@@ -3,7 +3,7 @@
  * Full-featured sound control panel with slide-down animation
  */
 
-import { scales, notes, soundPresets, selectedRoot, selectedScale, octave, selectedSound, updateMusicParameters } from './musicTheory.js';
+import { scales, notes, soundPresets, selectedRoot, selectedScale, octave, getSelectedSound, updateMusicParameters } from './musicTheory.js';
 import {
     updateSynths,
     setReverbAmountManual, setDelayAmountManual, setDelayTimeManual, setFilterFrequencyManual,
@@ -88,7 +88,7 @@ function populateSoundSelector() {
         const option = document.createElement('option');
         option.value = `builtin:${sound}`;
         option.textContent = sound.charAt(0).toUpperCase() + sound.slice(1);
-        if (sound === selectedSound) option.selected = true;
+        if (sound === getSelectedSound()) option.selected = true;
         builtinGroup.appendChild(option);
     });
 
@@ -301,10 +301,12 @@ function setupEventListeners() {
 
     document.getElementById('panel-sound-select').addEventListener('change', (e) => {
         const value = e.target.value;
+        console.log(`Control panel: Sound selector changed to ${value}`);
 
         if (value.startsWith('builtin:')) {
             // Handle built-in instrument selection
             const instrumentName = value.replace('builtin:', '');
+            console.log(`Control panel: Switching to builtin instrument: ${instrumentName}`);
 
             // Reset knobs to defaults when switching to built-in instruments
             resetKnobsToDefaults();
@@ -317,11 +319,13 @@ function setupEventListeners() {
             const mainSoundSelect = document.getElementById('sound-select');
             if (mainSoundSelect) {
                 mainSoundSelect.value = instrumentName;
+                console.log(`Synced main UI to: ${instrumentName}`);
             }
 
         } else if (value.startsWith('custom:')) {
             // Handle custom preset selection
             const presetName = value.replace('custom:', '');
+            console.log(`Control panel: Loading custom preset: ${presetName}`);
             if (presetManager.loadPreset(presetName)) {
                 showMessage(`Loaded custom preset: ${presetName}`);
             }
@@ -548,11 +552,13 @@ function updateAudioStatus(status) {
 // Reset knobs to default values (for built-in sound changes)
 function resetKnobsToDefaults() {
     // Check if audio is initialized before resetting knobs
-    if (!window.audioStarted) {
-        console.log("Audio not started yet, skipping knob reset");
+    if (!window.audioStarted || !knobManager) {
+        console.log("Audio not started yet or knobManager not initialized, skipping knob reset");
         return;
     }
-    // Reset all knobs to their default values with callbacks
+    
+    try {
+        // Reset all knobs to their default values with callbacks
     knobManager.setKnobValueWithCallback('master-volume', 0);
     knobManager.setKnobValueWithCallback('input-gain', 100);
     knobManager.setKnobValueWithCallback('reverb-amount', 0);
@@ -593,11 +599,16 @@ function resetKnobsToDefaults() {
     knobManager.setKnobValueWithCallback('fm-frequency', 1.0);
     knobManager.setKnobValueWithCallback('fm-depth', 0);
 
-    // Reset delay time and oscillator type selectors
-    document.getElementById('delay-time').value = '4n';
-    document.getElementById('oscillator-type').value = 'sine';
-    setDelayTimeManual('4n');
-    setOscillatorTypeManual('sine');
+        // Reset delay time and oscillator type selectors
+        document.getElementById('delay-time').value = '4n';
+        document.getElementById('oscillator-type').value = 'sine';
+        setDelayTimeManual('4n');
+        setOscillatorTypeManual('sine');
+        
+    } catch (error) {
+        console.error("Error resetting knobs to defaults:", error);
+        showMessage("Error resetting audio controls");
+    }
 }
 
 // Reset all settings to defaults

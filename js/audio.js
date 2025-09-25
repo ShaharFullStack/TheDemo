@@ -3,7 +3,7 @@
  * Audio synthesis with Tone.js 
  */
 
-import { soundPresets, selectedSound, MIN_PINCH_DIST, MAX_PINCH_DIST } from './musicTheory.js';
+import { soundPresets, getSelectedSound, MIN_PINCH_DIST, MAX_PINCH_DIST } from './musicTheory.js';
 import { mapRange, showMessage } from './utils.js';
 import { updateNoteDisplay } from './ui.js';
 
@@ -130,18 +130,21 @@ function setupAudio() {
   // Create professional audio processing chain
   setupProfessionalAudioChain();
   
+  // Get current sound selection
+  const currentSound = getSelectedSound();
+  
   // Create synths with optimized settings
   melodySynth = new Tone.Synth({
     oscillator: {
-      type: soundPresets[selectedSound].oscillator.type,
+      type: soundPresets[currentSound].oscillator.type,
       modulationType: "sine",
       harmonicity: 1
     },
     envelope: {
-      attack: soundPresets[selectedSound].envelope.attack,
-      decay: soundPresets[selectedSound].envelope.decay,
-      sustain: soundPresets[selectedSound].envelope.sustain,
-      release: soundPresets[selectedSound].envelope.release,
+      attack: soundPresets[currentSound].envelope.attack,
+      decay: soundPresets[currentSound].envelope.decay,
+      sustain: soundPresets[currentSound].envelope.sustain,
+      release: soundPresets[currentSound].envelope.release,
     },
     portamento: 0.02   // Small portamento for smoother transitions
   });
@@ -151,15 +154,15 @@ function setupAudio() {
     voice: Tone.Synth,
     options: {
       oscillator: {
-        type: soundPresets[selectedSound].oscillator.type,
+        type: soundPresets[currentSound].oscillator.type,
         modulationType: "sine",
         harmonicity: 1
       },
       envelope: {
-        attack: soundPresets[selectedSound].envelope.attack * 1.2,  // Slightly slower attack for chords
-        decay: soundPresets[selectedSound].envelope.decay,
-        sustain: soundPresets[selectedSound].envelope.sustain,
-        release: soundPresets[selectedSound].envelope.release * 1.5,  // Longer release for smoother chord transitions
+        attack: soundPresets[currentSound].envelope.attack * 1.2,  // Slightly slower attack for chords
+        decay: soundPresets[currentSound].envelope.decay,
+        sustain: soundPresets[currentSound].envelope.sustain,
+        release: soundPresets[currentSound].envelope.release * 1.5,  // Longer release for smoother chord transitions
       },
       portamento: 0.02  // Small portamento for smoother transitions
     }
@@ -186,11 +189,14 @@ function updateSynths() {
     return;
   }
 
-  const preset = soundPresets[selectedSound];
+  const currentSound = getSelectedSound();
+  const preset = soundPresets[currentSound];
   if (!preset) {
-    console.error(`Invalid sound preset: ${selectedSound}`);
+    console.error(`Invalid sound preset: ${currentSound}`);
     return;
   }
+  
+  console.log(`Updating synths with sound: ${currentSound}`);
   
   try {
     // Stop all current sounds first
@@ -240,8 +246,8 @@ function updateSynths() {
       });
       
       // Reconnect to the audio chain
-      melodySynth.connect(filter);
-      harmonySynth.connect(filter);
+      melodySynth.connect(inputGain);
+      harmonySynth.connect(inputGain);
       
       // Restore volumes
       melodySynth.volume.value = rightHandVolume;
@@ -253,7 +259,7 @@ function updateSynths() {
       currentMelodyNote = null;
       currentChord = null;
       
-      showMessage(`Switched sound to ${selectedSound}`);
+      showMessage(`Switched sound to ${currentSound}`);
     }, 100);
   } catch (error) {
     console.error("Error updating synths:", error);
@@ -332,19 +338,20 @@ function playChord(chord) {
       if (harmonySynth && harmonySynth.dispose) {
           harmonySynth.dispose();
       }
+      const currentSound = getSelectedSound();
       harmonySynth = new Tone.PolySynth({
         maxPolyphony: 8,
         voice: Tone.Synth,
         options: {
           oscillator: {
-            type: soundPresets[selectedSound].oscillator.type,
+            type: soundPresets[currentSound].oscillator.type,
             modulationType: "sine"
           },
           envelope: {
-            attack: soundPresets[selectedSound].envelope.attack * 1.2,
-            decay: soundPresets[selectedSound].envelope.decay,
-            sustain: soundPresets[selectedSound].envelope.sustain,
-            release: soundPresets[selectedSound].envelope.release * 1.5
+            attack: soundPresets[currentSound].envelope.attack * 1.2,
+            decay: soundPresets[currentSound].envelope.decay,
+            sustain: soundPresets[currentSound].envelope.sustain,
+            release: soundPresets[currentSound].envelope.release * 1.5
           },
           portamento: 0.02
         }
@@ -389,19 +396,20 @@ function stopChord() {
         harmonySynth.dispose();
         
         // Recreate harmony synth with same settings
+        const currentSound = getSelectedSound();
         harmonySynth = new Tone.PolySynth({
           maxPolyphony: 8,
           voice: Tone.Synth,
           options: {
             oscillator: {
-              type: soundPresets[selectedSound].oscillator.type,
+              type: soundPresets[currentSound].oscillator.type,
               modulationType: "sine"
             },
             envelope: {
-              attack: soundPresets[selectedSound].envelope.attack * 1.2,
-              decay: soundPresets[selectedSound].envelope.decay,
-              sustain: soundPresets[selectedSound].envelope.sustain,
-              release: soundPresets[selectedSound].envelope.release * 1.5
+              attack: soundPresets[currentSound].envelope.attack * 1.2,
+              decay: soundPresets[currentSound].envelope.decay,
+              sustain: soundPresets[currentSound].envelope.sustain,
+              release: soundPresets[currentSound].envelope.release * 1.5
             },
             portamento: 0.02
           }
@@ -555,21 +563,25 @@ function setHighpassFreqManual(freq) {
 }
 
 function setMidFreqManual(freq) {
-  if (midEQ) {
-    midEQ.mid.frequency.rampTo(freq, 0.1);
+  if (midEQ && midEQ.highFrequency) {
+    // EQ3 uses highFrequency for the mid crossover
+    midEQ.highFrequency.rampTo(freq, 0.1);
+  } else {
+    console.warn('Mid EQ frequency control not available');
   }
 }
 
 function setMidGainManual(gain) {
-  if (midEQ) {
+  if (midEQ && midEQ.mid) {
     midEQ.mid.rampTo(gain, 0.1);
+  } else {
+    console.warn('Mid EQ gain control not available');
   }
 }
 
 function setMidQManual(q) {
-  if (midEQ) {
-    midEQ.mid.Q.rampTo(q, 0.1);
-  }
+  // EQ3 doesn't have Q controls, it's a simple 3-band EQ
+  console.log(`Mid Q set to ${q} (EQ3 doesn't support Q adjustment)`);
 }
 
 function setCompressorRatioManual(ratio) {

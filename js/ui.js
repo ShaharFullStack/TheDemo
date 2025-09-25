@@ -12,7 +12,7 @@ import {
     selectedRoot,
     selectedScale,
     octave,
-    selectedSound,
+    getSelectedSound,
     soundPresets,
     updateMusicParameters,
     getNoteFromPosition,
@@ -64,7 +64,7 @@ function createUI() {
         const option = document.createElement('option');
         option.value = sound;
         option.textContent = sound.charAt(0).toUpperCase() + sound.slice(1);
-        if (sound === selectedSound) option.selected = true;
+        if (sound === getSelectedSound()) option.selected = true;
         soundSelector.appendChild(option);
     });
 
@@ -116,17 +116,23 @@ function createUI() {
     });
 
     soundSelector.addEventListener('change', function () {
+        const selectedValue = this.value;
+        console.log(`Main UI: Sound changed to ${selectedValue}`);
+        
         // Reset knobs to defaults when switching to built-in instruments
         resetKnobsToDefaults();
 
-        updateMusicParameters(null, null, null, this.value);
+        updateMusicParameters(null, null, null, selectedValue);
         updateSynths();
 
         // Sync with control panel if it exists
         const panelSoundSelect = document.getElementById('panel-sound-select');
         if (panelSoundSelect) {
-            panelSoundSelect.value = `builtin:${this.value}`;
+            panelSoundSelect.value = `builtin:${selectedValue}`;
+            console.log(`Synced control panel to: builtin:${selectedValue}`);
         }
+        
+        showMessage(`Sound changed to ${selectedValue}`);
     });
 
     // Display initial instructions

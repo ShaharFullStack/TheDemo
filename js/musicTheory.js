@@ -170,7 +170,27 @@ function updateMusicParameters(scale, root, newOctave, sound) {
   if (scale) selectedScale = scale;
   if (root) selectedRoot = root;
   if (newOctave) octave = newOctave;
-  if (sound) selectedSound = sound;
+  if (sound) {
+    selectedSound = sound;
+    console.log(`Updated selectedSound to: ${selectedSound}`);
+  }
+}
+
+// Getter functions for current values (to ensure modules get fresh values)
+function getSelectedSound() {
+  return selectedSound;
+}
+
+function getSelectedScale() {
+  return selectedScale;
+}
+
+function getSelectedRoot() {
+  return selectedRoot;
+}
+
+function getOctave() {
+  return octave;
 }
 
 // Export music theory elements
@@ -187,5 +207,9 @@ export {
   MAX_PINCH_DIST,
   getNoteFromPosition,
   getChordFromPosition,
-  updateMusicParameters
+  updateMusicParameters,
+  getSelectedSound,
+  getSelectedScale,
+  getSelectedRoot,
+  getOctave
 };
