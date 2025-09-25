@@ -7,7 +7,7 @@ import { mapRange } from './utils.js';
 
 // Real instrument gain compensation - can be adjusted if samples are too loud/quiet
 let realInstrumentGain = null;
-const REAL_INSTRUMENT_BOOST_DB = 12; // Default +12dB boost for real instruments
+const REAL_INSTRUMENT_BOOST_DB = 20; // Moderate boost for audible real instruments
 
 // Sample library configuration with Philharmonia Orchestra samples
 const SAMPLE_LIBRARY = {
@@ -27,11 +27,108 @@ const SAMPLE_LIBRARY = {
     type: 'real',
     baseUrl: './audio/guitar/',
     samples: {
-      'E2': 'E2.mp3', 'A2': 'A2.mp3', 'D3': 'D3.mp3', 'G3': 'G3.mp3', 'B3': 'B3.mp3', 'E4': 'E4.mp3'
+      // Natural samples (normal articulation)
+      'E2': 'guitar_E2_very-long_forte_normal.mp3',
+      'F2': 'guitar_F2_very-long_forte_normal.mp3',
+      'F#2': 'guitar_Fs2_very-long_forte_normal.mp3',
+      'G2': 'guitar_G2_very-long_forte_normal.mp3',
+      'G#2': 'guitar_Gs2_very-long_forte_normal.mp3',
+      'A2': 'guitar_A2_very-long_forte_normal.mp3',
+      'A#2': 'guitar_As2_very-long_forte_normal.mp3',
+      'B2': 'guitar_B2_very-long_forte_normal.mp3',
+      'C3': 'guitar_C3_very-long_forte_normal.mp3',
+      'C#3': 'guitar_Cs3_very-long_forte_normal.mp3',
+      'D3': 'guitar_D3_very-long_forte_normal.mp3',
+      'D#3': 'guitar_Ds3_very-long_forte_normal.mp3',
+      'E3': 'guitar_E3_very-long_forte_normal.mp3',
+      'F3': 'guitar_F3_very-long_forte_normal.mp3',
+      'F#3': 'guitar_Fs3_very-long_forte_normal.mp3',
+      'G3': 'guitar_G3_very-long_forte_normal.mp3',
+      'G#3': 'guitar_Gs3_very-long_forte_normal.mp3',
+      'A3': 'guitar_A3_very-long_forte_normal.mp3',
+      'A#3': 'guitar_As3_very-long_forte_normal.mp3',
+      'B3': 'guitar_B3_very-long_forte_normal.mp3',
+      'C4': 'guitar_C4_very-long_forte_normal.mp3',
+      'C#4': 'guitar_Cs4_very-long_forte_normal.mp3',
+      'D4': 'guitar_D4_very-long_forte_normal.mp3',
+      'D#4': 'guitar_Ds4_very-long_forte_normal.mp3',
+      'E4': 'guitar_E4_very-long_forte_normal.mp3',
+      'F4': 'guitar_F4_very-long_forte_normal.mp3',
+      'F#4': 'guitar_Fs4_very-long_forte_normal.mp3',
+      'G4': 'guitar_G4_very-long_forte_normal.mp3',
+      'G#4': 'guitar_Gs4_very-long_forte_normal.mp3',
+      'A4': 'guitar_A4_very-long_forte_normal.mp3',
+      'A#4': 'guitar_As4_very-long_forte_normal.mp3',
+      'B4': 'guitar_B4_very-long_forte_normal.mp3',
+      'D5': 'guitar_D5_very-long_forte_normal.mp3',
+      'D#5': 'guitar_Ds5_very-long_forte_normal.mp3',
+      'E5': 'guitar_E5_very-long_forte_normal.mp3',
+      'G5': 'guitar_G5_very-long_forte_normal.mp3',
+      'G#5': 'guitar_Gs5_very-long_forte_normal.mp3'
     },
-    baseNote: 'E3',
-    range: { min: 'E2', max: 'E5' },
-    articulations: ['normal']
+    harmonicSamples: {
+      // Harmonic samples for ethereal guitar tones
+      'A3': 'guitar_A3_very-long_forte_harmonics.mp3',
+      'B3': 'guitar_B3_very-long_piano_harmonics.mp3',
+      'A4': 'guitar_A4_very-long_forte_harmonics.mp3',
+      'B4': 'guitar_B4_very-long_forte_harmonics.mp3',
+      'C4': 'guitar_C4_very-long_piano_harmonics.mp3',
+      'C5': 'guitar_C5_very-long_piano_harmonics.mp3',
+      'D4': 'guitar_D4_very-long_forte_harmonics.mp3',
+      'D5': 'guitar_D5_very-long_forte_harmonics.mp3',
+      'D#4': 'guitar_Ds4_very-long_piano_harmonics.mp3',
+      'E3': 'guitar_E3_very-long_forte_harmonics.mp3',
+      'E4': 'guitar_E4_very-long_forte_harmonics.mp3',
+      'E5': 'guitar_E5_very-long_forte_harmonics.mp3',
+      'E6': 'guitar_E6_very-long_forte_harmonics.mp3',
+      'F4': 'guitar_F4_very-long_piano_harmonics.mp3',
+      'F#4': 'guitar_Fs4_very-long_piano_harmonics.mp3',
+      'F#5': 'guitar_Fs5_very-long_piano_harmonics.mp3',
+      'G3': 'guitar_G3_very-long_piano_harmonics.mp3',
+      'G4': 'guitar_G4_very-long_forte_harmonics.mp3',
+      'G5': 'guitar_G5_very-long_forte_harmonics.mp3'
+    },
+    softSamples: {
+      // Piano (soft) dynamics for expressive playing
+      'E2': 'guitar_E2_very-long_piano_normal.mp3',
+      'F2': 'guitar_F2_very-long_piano_normal.mp3',
+      'F#2': 'guitar_Fs2_very-long_piano_normal.mp3',
+      'G2': 'guitar_G2_very-long_piano_normal.mp3',
+      'G#2': 'guitar_Gs2_very-long_piano_normal.mp3',
+      'A2': 'guitar_A2_very-long_piano_normal.mp3',
+      'A#2': 'guitar_As2_very-long_piano_normal.mp3',
+      'B2': 'guitar_B2_very-long_piano_normal.mp3',
+      'C3': 'guitar_C3_very-long_piano_normal.mp3',
+      'C#3': 'guitar_Cs3_very-long_piano_normal.mp3',
+      'D3': 'guitar_D3_very-long_piano_normal.mp3',
+      'D#3': 'guitar_Ds3_very-long_piano_normal.mp3',
+      'E3': 'guitar_E3_very-long_piano_normal.mp3',
+      'F3': 'guitar_F3_very-long_piano_normal.mp3',
+      'F#3': 'guitar_Fs3_very-long_piano_normal.mp3',
+      'G3': 'guitar_G3_very-long_piano_normal.mp3',
+      'G#3': 'guitar_Gs3_very-long_piano_normal.mp3',
+      'A3': 'guitar_A3_very-long_piano_normal.mp3',
+      'A#3': 'guitar_As3_very-long_piano_normal.mp3',
+      'B3': 'guitar_B3_very-long_piano_normal.mp3',
+      'D4': 'guitar_D4_very-long_piano_normal.mp3',
+      'D#4': 'guitar_Ds4_very-long_piano_normal.mp3',
+      'E4': 'guitar_E4_very-long_piano_normal.mp3',
+      'F4': 'guitar_F4_very-long_piano_normal.mp3',
+      'F#4': 'guitar_Fs4_very-long_piano_normal.mp3',
+      'G4': 'guitar_G4_very-long_piano_normal.mp3',
+      'G#4': 'guitar_Gs4_very-long_piano_normal.mp3',
+      'A4': 'guitar_A4_very-long_piano_normal.mp3',
+      'A#4': 'guitar_As4_very-long_piano_normal.mp3',
+      'B4': 'guitar_B4_very-long_piano_normal.mp3',
+      'C6': 'guitar_C6_very-long_piano_normal.mp3',
+      'D5': 'guitar_D5_very-long_piano_normal.mp3',
+      'D#5': 'guitar_Ds5_very-long_piano_normal.mp3',
+      'E5': 'guitar_E5_very-long_piano_normal.mp3'
+    },
+    baseNote: 'A3',
+    range: { min: 'E2', max: 'G#5' },
+    articulations: ['normal', 'harmonics', 'soft'],
+    dynamics: ['pianissimo', 'piano', 'forte']
   },
   realViolin: {
     name: 'Violin',
@@ -523,13 +620,14 @@ function stopRealChord(instrumentId, notes) {
 }
 
 /**
- * Set volume for a real instrument
+ * Set volume for a real instrument with MIDI volume matching
  * @param {string} instrumentId - Instrument identifier
- * @param {number} volume - Volume in dB
+ * @param {number} volume - Volume in dB (matches MIDI range: -30 to +5)
  */
 function setRealInstrumentVolume(instrumentId, volume) {
   const sampler = realInstrumentSamplers.get(instrumentId);
   if (sampler) {
+    // Match MIDI volume range without over-reducing
     sampler.volume.rampTo(volume, 0.1);
   }
 }
