@@ -5,6 +5,7 @@
 
 import { showMessage } from './utils.js';
 import { updateSynths } from './audio.js';
+import { resetKnobsToDefaults } from './controlPanel.js';
 import {
     scales,
     notes,
@@ -63,6 +64,7 @@ function createUI() {
         const option = document.createElement('option');
         option.value = sound;
         option.textContent = sound.charAt(0).toUpperCase() + sound.slice(1);
+        if (sound === selectedSound) option.selected = true;
         soundSelector.appendChild(option);
     });
 
@@ -114,8 +116,17 @@ function createUI() {
     });
 
     soundSelector.addEventListener('change', function () {
+        // Reset knobs to defaults when switching to built-in instruments
+        resetKnobsToDefaults();
+
         updateMusicParameters(null, null, null, this.value);
         updateSynths();
+
+        // Sync with control panel if it exists
+        const panelSoundSelect = document.getElementById('panel-sound-select');
+        if (panelSoundSelect) {
+            panelSoundSelect.value = `builtin:${this.value}`;
+        }
     });
 
     // Display initial instructions

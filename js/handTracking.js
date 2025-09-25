@@ -6,6 +6,7 @@
 import { calculateDistance, showMessage } from './utils.js';
 import { getNoteFromPosition, getChordFromPosition } from './musicTheory.js';
 import { playMelodyNote, playChord, stopMelody, stopChord, setVolume } from './audio.js';
+import { updateTrackingStatus } from './controlPanel.js';
 
 // Hand tracking variables
 let hands;
@@ -94,9 +95,11 @@ function setupHandTracking() {
             .then(() => {
                 console.log("Camera started successfully.");
                 showMessage("Camera is on, Press 'Start Audio' to play.");
+                updateTrackingStatus('active');
             })
             .catch(err => {
                 console.error("Error starting webcam:", err);
+                updateTrackingStatus('error');
                 const instructions = document.getElementById('instructions');
                 if (instructions) instructions.textContent = "Cannot access webcam. Please allow access.";
             });

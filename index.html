@@ -18,6 +18,548 @@
     <div class="title-container">
     </div>
 
+    <!-- Control Panel Toggle Button -->
+    <button id="control-panel-toggle" class="control-toggle">
+      <span class="toggle-icon">⚙️</span>
+      <span class="toggle-text">Sound Controls</span>
+    </button>
+
+    <!-- Sound Control Panel -->
+    <div id="sound-control-panel" class="sound-panel">
+      <div class="sound-panel-header">
+        <h2>Sound Control Panel</h2>
+        <button id="close-panel" class="close-btn">×</button>
+      </div>
+
+      <div class="sound-panel-content">
+        <!-- Musical Settings Section -->
+        <div class="control-section">
+          <h3>Musical Settings</h3>
+          <div class="control-group">
+            <div class="control-item">
+              <label for="panel-root-select">Root Note</label>
+              <select id="panel-root-select" class="panel-select"></select>
+            </div>
+            <div class="control-item">
+              <label for="panel-scale-select">Scale</label>
+              <select id="panel-scale-select" class="panel-select"></select>
+            </div>
+            <div class="control-item">
+              <label for="panel-octave-select">Octave</label>
+              <select id="panel-octave-select" class="panel-select"></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sound Settings Section -->
+        <div class="control-section">
+          <h3>Sound Settings</h3>
+          <div class="control-group">
+            <div class="control-item">
+              <label for="panel-sound-select">Instrument</label>
+              <select id="panel-sound-select" class="panel-select"></select>
+            </div>
+            <div class="control-item">
+              <label>Master Volume</label>
+              <div class="knob-container">
+                <div class="knob" id="master-volume" data-min="-40" data-max="10" data-value="0" data-unit="dB">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Gain</label>
+              <div class="knob-container">
+                <div class="knob" id="input-gain" data-min="0" data-max="200" data-value="100" data-unit="%">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">100</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reverb & Spatial Section -->
+        <div class="control-section">
+          <h3>Reverb & Spatial</h3>
+          <div class="control-group">
+            <div class="control-item">
+              <label>Reverb Mix</label>
+              <div class="knob-container">
+                <div class="knob" id="reverb-amount" data-min="0" data-max="100" data-value="0" data-unit="%">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Room Size</label>
+              <div class="knob-container">
+                <div class="knob" id="reverb-size" data-min="0.5" data-max="8.0" data-value="2.0" data-unit="s">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">2.0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Pre-Delay</label>
+              <div class="knob-container">
+                <div class="knob" id="reverb-predelay" data-min="0" data-max="200" data-value="50" data-unit="ms">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">50</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Stereo Width</label>
+              <div class="knob-container">
+                <div class="knob" id="stereo-width" data-min="0" data-max="200" data-value="100" data-unit="%">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">100</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Delay & Modulation Section -->
+        <div class="control-section">
+          <h3>Delay & Modulation</h3>
+          <div class="control-group">
+            <div class="control-item">
+              <label>Delay Mix</label>
+              <div class="knob-container">
+                <div class="knob" id="delay-amount" data-min="0" data-max="100" data-value="0" data-unit="%">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Delay Time</label>
+              <select id="delay-time" class="panel-select">
+                <option value="8n">1/8 Note</option>
+                <option value="4n" selected>1/4 Note</option>
+                <option value="2n">1/2 Note</option>
+                <option value="1n">Whole Note</option>
+              </select>
+            </div>
+            <div class="control-item">
+              <label>Feedback</label>
+              <div class="knob-container">
+                <div class="knob" id="delay-feedback" data-min="0" data-max="95" data-value="25" data-unit="%">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">25</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Chorus Rate</label>
+              <div class="knob-container">
+                <div class="knob" id="chorus-rate" data-min="0.1" data-max="8.0" data-value="1.5" data-unit="Hz">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">1.5</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Chorus Depth</label>
+              <div class="knob-container">
+                <div class="knob" id="chorus-depth" data-min="0" data-max="100" data-value="0" data-unit="%">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EQ & Filtering Section -->
+        <div class="control-section">
+          <h3>EQ & Filtering</h3>
+          <div class="control-group">
+            <div class="control-item">
+              <label>High Cut</label>
+              <div class="knob-container">
+                <div class="knob" id="filter-freq" data-min="1000" data-max="20000" data-value="8000" data-unit="Hz">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">8.0k</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Low Cut</label>
+              <div class="knob-container">
+                <div class="knob" id="highpass-freq" data-min="20" data-max="500" data-value="20" data-unit="Hz">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">20</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Mid Freq</label>
+              <div class="knob-container">
+                <div class="knob" id="mid-freq" data-min="200" data-max="5000" data-value="1000" data-unit="Hz">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">1.0k</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Mid Gain</label>
+              <div class="knob-container">
+                <div class="knob" id="mid-gain" data-min="-12" data-max="12" data-value="0" data-unit="dB">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Q Factor</label>
+              <div class="knob-container">
+                <div class="knob" id="mid-q" data-min="0.5" data-max="8.0" data-value="1.0" data-unit="">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">1.0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamics & Saturation Section -->
+        <div class="control-section">
+          <h3>Dynamics & Saturation</h3>
+          <div class="control-group">
+            <div class="control-item">
+              <label>Compressor</label>
+              <div class="knob-container">
+                <div class="knob" id="compressor-ratio" data-min="1" data-max="20" data-value="3" data-unit=":1">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">3</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Threshold</label>
+              <div class="knob-container">
+                <div class="knob" id="compressor-threshold" data-min="-40" data-max="0" data-value="-12" data-unit="dB">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">-12</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Attack</label>
+              <div class="knob-container">
+                <div class="knob" id="compressor-attack" data-min="0.001" data-max="0.1" data-value="0.01" data-unit="s">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">10ms</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Release</label>
+              <div class="knob-container">
+                <div class="knob" id="compressor-release" data-min="0.01" data-max="1.0" data-value="0.2" data-unit="s">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">200ms</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Saturation</label>
+              <div class="knob-container">
+                <div class="knob" id="saturation" data-min="0" data-max="100" data-value="0" data-unit="%">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Advanced Audio Section -->
+        <div class="control-section">
+          <h3>Advanced Audio</h3>
+          <div class="control-group">
+            <div class="control-item">
+              <label>Distortion</label>
+              <div class="knob-container">
+                <div class="knob" id="distortion" data-min="0" data-max="100" data-value="0" data-unit="%">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Phaser Rate</label>
+              <div class="knob-container">
+                <div class="knob" id="phaser-rate" data-min="0.1" data-max="10.0" data-value="0.5" data-unit="Hz">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">0.5</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Phaser Depth</label>
+              <div class="knob-container">
+                <div class="knob" id="phaser-depth" data-min="0" data-max="100" data-value="0" data-unit="%">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Tremolo Rate</label>
+              <div class="knob-container">
+                <div class="knob" id="tremolo-rate" data-min="0.1" data-max="20.0" data-value="10.0" data-unit="Hz">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">10.0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Tremolo Depth</label>
+              <div class="knob-container">
+                <div class="knob" id="tremolo-depth" data-min="0" data-max="100" data-value="0" data-unit="%">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Auto-Wah</label>
+              <div class="knob-container">
+                <div class="knob" id="auto-wah" data-min="0" data-max="100" data-value="0" data-unit="%">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Envelope Controls -->
+        <div class="control-section">
+          <h3>Envelope Shaping</h3>
+          <div class="control-group">
+            <div class="control-item">
+              <label>Attack Time</label>
+              <div class="knob-container">
+                <div class="knob" id="envelope-attack" data-min="0.001" data-max="2.0" data-value="0.1" data-unit="s">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">100ms</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Decay Time</label>
+              <div class="knob-container">
+                <div class="knob" id="envelope-decay" data-min="0.001" data-max="2.0" data-value="0.3" data-unit="s">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">300ms</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Sustain Level</label>
+              <div class="knob-container">
+                <div class="knob" id="envelope-sustain" data-min="0.0" data-max="1.0" data-value="0.7" data-unit="">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">0.7</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Release Time</label>
+              <div class="knob-container">
+                <div class="knob" id="envelope-release" data-min="0.001" data-max="5.0" data-value="0.8" data-unit="s">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">800ms</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Oscillator Controls -->
+        <div class="control-section">
+          <h3>Oscillator & Modulation</h3>
+          <div class="control-group">
+            <div class="control-item">
+              <label for="oscillator-type">Waveform</label>
+              <select id="oscillator-type" class="panel-select">
+                <option value="sine">Sine</option>
+                <option value="square">Square</option>
+                <option value="sawtooth">Sawtooth</option>
+                <option value="triangle">Triangle</option>
+              </select>
+            </div>
+            <div class="control-item">
+              <label>Detune</label>
+              <div class="knob-container">
+                <div class="knob" id="oscillator-detune" data-min="-100" data-max="100" data-value="0" data-unit="cents">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>FM Frequency</label>
+              <div class="knob-container">
+                <div class="knob" id="fm-frequency" data-min="0.1" data-max="50.0" data-value="1.0" data-unit="Hz">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">1.0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>FM Depth</label>
+              <div class="knob-container">
+                <div class="knob" id="fm-depth" data-min="0" data-max="100" data-value="0" data-unit="%">
+                  <div class="knob-face">
+                    <div class="knob-indicator"></div>
+                    <div class="knob-value">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Settings -->
+        <div class="control-section">
+          <h3>Performance</h3>
+          <div class="control-group">
+            <div class="control-item">
+              <label>Hand Tracking Status</label>
+              <div class="status-indicator">
+                <span id="tracking-status" class="status-dot"></span>
+                <span id="tracking-text">Initializing...</span>
+              </div>
+            </div>
+            <div class="control-item">
+              <label>Audio Status</label>
+              <div class="status-indicator">
+                <span id="audio-status" class="status-dot"></span>
+                <span id="audio-text">Not Started</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preset Management -->
+        <div class="control-section">
+          <h3>Preset Management</h3>
+          <div class="control-group">
+            <div class="control-item">
+              <label for="preset-name">Preset Name</label>
+              <input type="text" id="preset-name" class="preset-input" placeholder="Enter preset name..." maxlength="30">
+            </div>
+            <div class="control-item">
+              <label for="custom-presets">Custom Presets</label>
+              <select id="custom-presets" class="panel-select">
+                <option value="">-- Select Custom Preset --</option>
+              </select>
+            </div>
+          </div>
+          <div class="preset-buttons">
+            <button id="save-preset" class="preset-btn save-btn">
+              <span class="btn-icon">💾</span>
+              Save Current Settings
+            </button>
+            <button id="load-preset" class="preset-btn load-btn">
+              <span class="btn-icon">📁</span>
+              Load Selected Preset
+            </button>
+            <button id="delete-preset" class="preset-btn delete-btn">
+              <span class="btn-icon">🗑️</span>
+              Delete Selected
+            </button>
+            <button id="export-preset" class="preset-btn export-btn">
+              <span class="btn-icon">📤</span>
+              Export Preset
+            </button>
+            <button id="import-preset" class="preset-btn import-btn">
+              <span class="btn-icon">📥</span>
+              Import Preset
+            </button>
+          </div>
+          <input type="file" id="import-file" accept=".json" style="display: none;">
+        </div>
+
+        <!-- Reset Button -->
+        <div class="control-section">
+          <button id="reset-settings" class="reset-btn">Reset to Defaults</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Video and canvas elements for MediaPipe -->
     <video class="input_video"></video>
     <canvas class="output_canvas" width="1420" height="772"></canvas>

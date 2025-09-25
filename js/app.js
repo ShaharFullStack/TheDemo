@@ -7,6 +7,7 @@
 import { setupAudio, updateSynths } from './audio.js';
 import { setupHandTracking, setupWebcamElements } from './handTracking.js';
 import { createUI, updateUI } from './ui.js';
+import { initControlPanel, setupMasterVolumeConnection, updateAudioStatus, updateTrackingStatus } from './controlPanel.js';
 import { showMessage } from './utils.js';
 
 // Initialize global audioStarted state
@@ -24,12 +25,18 @@ function init() {
 
   // Create UI
   createUI();
-  
+
+  // Initialize control panel
+  initControlPanel();
+
   // Get webcam elements for hand tracking
   setupWebcamElements();
-  
+
   // Start hand tracking
   setupHandTracking();
+
+  // Update status indicators
+  updateTrackingStatus('initializing');
   
   // Wait for Tone.js to be ready before adding the button
   if (typeof Tone !== 'undefined') {
@@ -107,6 +114,10 @@ function addStartAudioButton() {
           showMessage('Move your hands to play!');
           // Setup audio after user interaction
           setupAudio();
+          // Setup master volume connection
+          setupMasterVolumeConnection();
+          // Update audio status
+          updateAudioStatus('active');
         }).catch(err => {
           console.error("Error starting Tone.js:", err);
           showMessage('Error starting audio: ' + err.message);
@@ -121,6 +132,10 @@ function addStartAudioButton() {
       document.body.removeChild(startButton);
       showMessage('Move your hands to play!');
       setupAudio();
+      // Setup master volume connection
+      setupMasterVolumeConnection();
+      // Update audio status
+      updateAudioStatus('active');
     }
   });
 }
