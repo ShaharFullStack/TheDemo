@@ -6,6 +6,22 @@
 import { soundPresets, getSelectedSound, MIN_PINCH_DIST, MAX_PINCH_DIST } from './musicTheory.js';
 import { mapRange, showMessage } from './utils.js';
 import { updateNoteDisplay } from './ui.js';
+import { 
+  initializeRealInstruments, 
+  connectRealInstrument, 
+  disconnectRealInstrument,
+  playRealNote, 
+  stopRealNote, 
+  playRealChord, 
+  stopRealChord,
+  setRealInstrumentVolume,
+  setRealInstrumentBoost,
+  isRealInstrument,
+  getRealInstrumentConfig,
+  realInstrumentSamplers,
+  velocityToDynamic,
+  getArticulationForNote
+} from './realInstruments.js';
 
 // Audio variables
 let melodySynth, harmonySynth, filter, reverb, delay;
@@ -17,6 +33,16 @@ let leftHandVolume = 0; // Default volume (higher)
 let rightHandVolume = 0; // Default volume (higher)
 let lastMelodyNote = null;
 let lastChord = null;
+
+// Real instrument variables
+let currentInstrumentType = 'synthetic'; // 'synthetic' or 'real'
+let currentRealInstrument = null;
+let realInstrumentInitialized = false;
+
+// Gesture-based parameters for real instruments
+let currentPinchDistance = 0.05; // Default pinch distance
+let currentHandSpeed = 0; // Hand movement speed
+let lastHandPositions = { left: null, right: null };
 
 // Professional audio processing chain
 let masterGain, inputGain;
@@ -122,7 +148,7 @@ function setupProfessionalAudioChain() {
 }
 
 // Setup audio with Tone.js - with improved audio quality settings
-function setupAudio() {
+async function setupAudio() {
   // Set overall audio quality parameters - fixed the latencyHint issue
   // Create context with options instead of setting properties directly
   Tone.context.lookAhead = 0.2;  // This property is still writable
@@ -130,51 +156,77 @@ function setupAudio() {
   // Create professional audio processing chain
   setupProfessionalAudioChain();
   
+  // Initialize real instruments
+  if (!realInstrumentInitialized) {
+    await initializeRealInstruments();
+    realInstrumentInitialized = true;
+  }
+  
   // Get current sound selection
   const currentSound = getSelectedSound();
+  const preset = soundPresets[currentSound];
   
-  // Create synths with optimized settings
-  melodySynth = new Tone.Synth({
-    oscillator: {
-      type: soundPresets[currentSound].oscillator.type,
-      modulationType: "sine",
-      harmonicity: 1
-    },
-    envelope: {
-      attack: soundPresets[currentSound].envelope.attack,
-      decay: soundPresets[currentSound].envelope.decay,
-      sustain: soundPresets[currentSound].envelope.sustain,
-      release: soundPresets[currentSound].envelope.release,
-    },
-    portamento: 0.02   // Small portamento for smoother transitions
-  });
+  // Determine if we're using real or synthetic instruments
+  currentInstrumentType = preset.type || 'synthetic';
   
-  harmonySynth = new Tone.PolySynth({
-    maxPolyphony: 6,   // Limit max polyphony to prevent overloading
-    voice: Tone.Synth,
-    options: {
+  if (currentInstrumentType === 'real') {
+    // Set up real instrument
+    currentRealInstrument = currentSound;
+    connectRealInstrument(currentSound, inputGain);
+    
+    // Create dummy synths for compatibility (won't be used)
+    melodySynth = new Tone.Synth();
+    harmonySynth = new Tone.PolySynth();
+    melodySynth.volume.value = -Infinity;
+    harmonySynth.volume.value = -Infinity;
+    
+    console.log(`Initialized real instrument: ${preset.name}`);
+  } else {
+    // Create synthetic synths with optimized settings
+    melodySynth = new Tone.Synth({
       oscillator: {
-        type: soundPresets[currentSound].oscillator.type,
+        type: preset.oscillator.type,
         modulationType: "sine",
         harmonicity: 1
       },
       envelope: {
-        attack: soundPresets[currentSound].envelope.attack * 1.2,  // Slightly slower attack for chords
-        decay: soundPresets[currentSound].envelope.decay,
-        sustain: soundPresets[currentSound].envelope.sustain,
-        release: soundPresets[currentSound].envelope.release * 1.5,  // Longer release for smoother chord transitions
+        attack: preset.envelope.attack,
+        decay: preset.envelope.decay,
+        sustain: preset.envelope.sustain,
+        release: preset.envelope.release,
       },
-      portamento: 0.02  // Small portamento for smoother transitions
-    }
-  });
-  
-  // Connect synths to professional audio chain
-  melodySynth.connect(inputGain);
-  harmonySynth.connect(inputGain);
-  
-  // Set initial volume with better defaults
-  melodySynth.volume.value = rightHandVolume;
-  harmonySynth.volume.value = leftHandVolume;
+      portamento: 0.02   // Small portamento for smoother transitions
+    });
+    
+    harmonySynth = new Tone.PolySynth({
+      maxPolyphony: 6,   // Limit max polyphony to prevent overloading
+      voice: Tone.Synth,
+      options: {
+        oscillator: {
+          type: preset.oscillator.type,
+          modulationType: "sine",
+          harmonicity: 1
+        },
+        envelope: {
+          attack: preset.envelope.attack * 1.2,  // Slightly slower attack for chords
+          decay: preset.envelope.decay,
+          sustain: preset.envelope.sustain,
+          release: preset.envelope.release * 1.5,  // Longer release for smoother chord transitions
+        },
+        portamento: 0.02  // Small portamento for smoother transitions
+      }
+    });
+    
+    // Connect synths to professional audio chain
+    melodySynth.connect(inputGain);
+    harmonySynth.connect(inputGain);
+    
+    // Set initial volume with better defaults
+    melodySynth.volume.value = rightHandVolume;
+    harmonySynth.volume.value = leftHandVolume;
+    
+    console.log(`Initialized synthetic instrument: ${currentSound}`);
+  }
 
   // Make global audioStarted available
   window.audioStarted = true;
@@ -200,58 +252,84 @@ function updateSynths() {
   
   try {
     // Stop all current sounds first
-    melodySynth.triggerRelease();
-    harmonySynth.releaseAll();
+    if (currentInstrumentType === 'real' && currentRealInstrument) {
+      stopRealNote(currentRealInstrument);
+      stopRealChord(currentRealInstrument);
+      disconnectRealInstrument();
+    } else {
+      melodySynth.triggerRelease();
+      harmonySynth.releaseAll();
+    }
     
     // Wait for release to complete
-    setTimeout(() => {
-      // Completely rebuild synths for clean sound when changing
+    setTimeout(async () => {
+      // Determine new instrument type
+      currentInstrumentType = preset.type || 'synthetic';
       
-      // Dispose old synths
-      melodySynth.dispose();
-      harmonySynth.dispose();
-      
-      // Create new melody synth
-      melodySynth = new Tone.Synth({
-        oscillator: {
-          type: preset.oscillator.type,
-          modulationType: "sine"
-        },
-        envelope: {
-          attack: preset.envelope.attack,
-          decay: preset.envelope.decay,
-          sustain: preset.envelope.sustain,
-          release: preset.envelope.release
-        },
-        portamento: 0.02
-      });
-      
-      // Create new harmony synth
-      harmonySynth = new Tone.PolySynth({
-        maxPolyphony: 6,
-        voice: Tone.Synth,
-        options: {
+      if (currentInstrumentType === 'real') {
+        // Switch to real instrument
+        currentRealInstrument = currentSound;
+        connectRealInstrument(currentSound, inputGain);
+        
+        // Mute synthetic synths
+        melodySynth.volume.value = -Infinity;
+        harmonySynth.volume.value = -Infinity;
+        
+        console.log(`Switched to real instrument: ${preset.name}`);
+        showMessage(`Switched to ${preset.name}`);
+      } else {
+        // Switch to synthetic instrument
+        currentRealInstrument = null;
+        
+        // Dispose old synths
+        melodySynth.dispose();
+        harmonySynth.dispose();
+        
+        // Create new melody synth
+        melodySynth = new Tone.Synth({
           oscillator: {
             type: preset.oscillator.type,
             modulationType: "sine"
           },
           envelope: {
-            attack: preset.envelope.attack * 1.2,
+            attack: preset.envelope.attack,
             decay: preset.envelope.decay,
             sustain: preset.envelope.sustain,
-            release: preset.envelope.release * 1.5
+            release: preset.envelope.release
           },
           portamento: 0.02
-        }
-      });
-      
-      // Reconnect to the audio chain
-      melodySynth.connect(inputGain);
-      harmonySynth.connect(inputGain);
-      
-      // Restore volumes
-      melodySynth.volume.value = rightHandVolume;
-      harmonySynth.volume.value = leftHandVolume;
+        });
+        
+        // Create new harmony synth
+        harmonySynth = new Tone.PolySynth({
+          maxPolyphony: 6,
+          voice: Tone.Synth,
+          options: {
+            oscillator: {
+              type: preset.oscillator.type,
+              modulationType: "sine"
+            },
+            envelope: {
+              attack: preset.envelope.attack * 1.2,
+              decay: preset.envelope.decay,
+              sustain: preset.envelope.sustain,
+              release: preset.envelope.release * 1.5
+            },
+            portamento: 0.02
+          }
+        });
+        
+        // Reconnect to the audio chain
+        melodySynth.connect(inputGain);
+        harmonySynth.connect(inputGain);
+        
+        // Restore volumes
+        melodySynth.volume.value = rightHandVolume;
+        harmonySynth.volume.value = leftHandVolume;
+        
+        console.log(`Switched to synthetic instrument: ${currentSound}`);
+        showMessage(`Switched sound to ${currentSound}`);
+      }
       
       // Reset playing states
       rightHandIsPlaying = false;
@@ -259,47 +337,120 @@ function updateSynths() {
       currentMelodyNote = null;
       currentChord = null;
       
-      showMessage(`Switched sound to ${currentSound}`);
     }, 100);
   } catch (error) {
     console.error("Error updating synths:", error);
   }
 }
 
-// FIXED: Improved melody note function with reduced distortion and animation triggers
-function playMelodyNote(note) {
-  if (!window.audioStarted || !melodySynth) return;
+// FIXED: Improved melody note function with gesture-responsive real instruments
+function playMelodyNote(note, handPosition = null, pinchDistance = null) {
+  if (!window.audioStarted) return;
+  
+  // Update gesture parameters if provided
+  if (pinchDistance !== null) currentPinchDistance = pinchDistance;
   
   // Check if the note has actually changed
   const noteChanged = note !== lastMelodyNote;
   lastMelodyNote = note;
   
   try {
-    if (!rightHandIsPlaying) {
-      // First time playing a note
-      melodySynth.triggerAttack(note, Tone.now(), 0.8);  // Reduced velocity for cleaner sound
-      rightHandIsPlaying = true;
-      currentMelodyNote = note;
+    if (currentInstrumentType === 'real' && currentRealInstrument) {
+      // Calculate gesture-based parameters for real instruments
+      const velocity = mapRange(Math.abs(rightHandVolume), -30, 5, 0.2, 0.9);
       
-      // Trigger animation effect for new note
-      noteChangeTime = Date.now() * 0.001;
+      // Use pinch distance to control dynamics and articulation
+      const gestureIntensity = mapRange(currentPinchDistance, MIN_PINCH_DIST, MAX_PINCH_DIST, 1.0, 0.0);
+      const adjustedVelocity = velocity * (0.5 + gestureIntensity * 0.5); // Pinched = softer, open = louder
       
-    //   console.log("Started playing melody note:", note);
-    } else if (noteChanged) {
-      // FIXED: Use proper scheduled timing for clean note transitions
-      const now = Tone.now();
+      // Select dynamic based on both volume and gesture
+      let dynamic = velocityToDynamic(adjustedVelocity);
       
-      // Release the current note with a precise timestamp
-      melodySynth.triggerRelease(now + 0.02);
+      // Gesture-based articulation selection
+      let articulation = 'normal';
+      if (currentPinchDistance < MIN_PINCH_DIST * 1.5) {
+        // Very pinched = special articulations
+        if (currentRealInstrument === 'realFlute') {
+          articulation = Math.random() > 0.5 ? 'staccato' : 'tenuto';
+        } else if (currentRealInstrument === 'realCello') {
+          articulation = Math.random() > 0.5 ? 'arco-staccato' : 'arco-spiccato';
+        }
+      } else if (currentPinchDistance > MAX_PINCH_DIST * 0.8) {
+        // Open hand = legato/smooth articulations
+        if (currentRealInstrument === 'realFlute') {
+          articulation = 'legato';
+        } else if (currentRealInstrument === 'realCello') {
+          articulation = 'arco-legato';
+        }
+      }
       
-      // Schedule the attack of the new note with a slight delay
-      melodySynth.triggerAttack(note, now + 0.07, 0.7);
-      currentMelodyNote = note;
+      // Calculate hand speed for additional articulation control
+      if (handPosition && lastHandPositions.right) {
+        const distance = Math.sqrt(
+          Math.pow(handPosition.x - lastHandPositions.right.x, 2) + 
+          Math.pow(handPosition.y - lastHandPositions.right.y, 2)
+        );
+        currentHandSpeed = distance;
+        
+        // Fast movements = more aggressive articulations
+        if (currentHandSpeed > 0.05 && currentRealInstrument === 'realCello') {
+          articulation = Math.random() > 0.7 ? 'arco-detache' : 'arco-spiccato';
+        }
+      }
       
-      // Trigger animation effect for note change
-      noteChangeTime = Date.now() * 0.001;
+      if (handPosition) lastHandPositions.right = { ...handPosition };
       
-    //   console.log("Changed melody note to:", note);
+      if (!rightHandIsPlaying) {
+        // First time playing a note
+        playRealNote(currentRealInstrument, note, adjustedVelocity, null, dynamic, articulation);
+        rightHandIsPlaying = true;
+        currentMelodyNote = note;
+        
+        // Trigger animation effect for new note
+        noteChangeTime = Date.now() * 0.001;
+        
+        console.log(`Playing ${note} with ${dynamic} ${articulation} (pinch: ${currentPinchDistance.toFixed(3)})`);
+        
+      } else if (noteChanged) {
+        // Stop current note and play new one with gesture-based parameters
+        stopRealNote(currentRealInstrument, currentMelodyNote);
+        setTimeout(() => {
+          playRealNote(currentRealInstrument, note, adjustedVelocity, null, dynamic, articulation);
+          currentMelodyNote = note;
+          
+          // Trigger animation effect for note change
+          noteChangeTime = Date.now() * 0.001;
+          
+          console.log(`Changed to ${note} with ${dynamic} ${articulation} (pinch: ${currentPinchDistance.toFixed(3)})`);
+        }, 30);
+      }
+    } else {
+      // Use synthetic instrument
+      if (!melodySynth) return;
+      
+      if (!rightHandIsPlaying) {
+        // First time playing a note
+        melodySynth.triggerAttack(note, Tone.now(), 0.8);  // Reduced velocity for cleaner sound
+        rightHandIsPlaying = true;
+        currentMelodyNote = note;
+        
+        // Trigger animation effect for new note
+        noteChangeTime = Date.now() * 0.001;
+        
+      } else if (noteChanged) {
+        // FIXED: Use proper scheduled timing for clean note transitions
+        const now = Tone.now();
+        
+        // Release the current note with a precise timestamp
+        melodySynth.triggerRelease(now + 0.02);
+        
+        // Schedule the attack of the new note with a slight delay
+        melodySynth.triggerAttack(note, now + 0.07, 0.7);
+        currentMelodyNote = note;
+        
+        // Trigger animation effect for note change
+        noteChangeTime = Date.now() * 0.001;
+      }
     }
     
     updateNoteDisplay();
@@ -308,62 +459,136 @@ function playMelodyNote(note) {
   }
 }
 
-// FIXED: Complete revision of chord playing to eliminate distortion and enhance animation
-function playChord(chord) {
-  if (!window.audioStarted || !harmonySynth) return;
+// FIXED: Complete revision of chord playing with gesture-responsive real instruments
+function playChord(chord, handPosition = null, pinchDistance = null) {
+  if (!window.audioStarted) return;
+  
+  // Update gesture parameters if provided
+  if (pinchDistance !== null) currentPinchDistance = pinchDistance;
   
   // Check if the chord has actually changed by comparing note arrays
   const chordChanged = !lastChord || 
                        JSON.stringify(chord.notes) !== JSON.stringify(lastChord.notes);
   
   try {
-    if (!leftHandIsPlaying) {
-      // First-time playing
-      harmonySynth.triggerAttack(chord.notes, Tone.now(), 0.6);  // Reduced velocity for softer attack
-      leftHandIsPlaying = true;
-      currentChord = chord;
-      lastChord = {...chord}; // Make a copy to prevent reference issues
+    if (currentInstrumentType === 'real' && currentRealInstrument) {
+      // Calculate gesture-based parameters for real instruments
+      const velocity = mapRange(Math.abs(leftHandVolume), -30, 5, 0.3, 0.8); // Slightly softer for chords
       
-      // Trigger animation effects for new chord
-      chordChangeTime = Date.now() * 0.001;
+      // Use pinch distance to control chord expression
+      const gestureIntensity = mapRange(currentPinchDistance, MIN_PINCH_DIST, MAX_PINCH_DIST, 1.0, 0.0);
+      const adjustedVelocity = velocity * (0.4 + gestureIntensity * 0.6); // More variation for chords
       
-    //   console.log("Started playing chord:", chord.name, chord.notes);
-    } else if (chordChanged) {
-      // CRITICAL FIX: Using proper sequence to eliminate distortion
+      // Select dynamic based on gesture
+      let dynamic = velocityToDynamic(adjustedVelocity);
       
-      // 1. Release all current notes in the past to ensure clean release
-      harmonySynth.releaseAll(Tone.now() - 0.005);
-      
-      // 2. Dispose of the synth and recreate it only if necessary
-      if (harmonySynth && harmonySynth.dispose) {
-          harmonySynth.dispose();
-      }
-      const currentSound = getSelectedSound();
-      harmonySynth = new Tone.PolySynth({
-        maxPolyphony: 8,
-        voice: Tone.Synth,
-        options: {
-          oscillator: {
-            type: soundPresets[currentSound].oscillator.type,
-            modulationType: "sine"
-          },
-          envelope: {
-            attack: soundPresets[currentSound].envelope.attack * 1.2,
-            decay: soundPresets[currentSound].envelope.decay,
-            sustain: soundPresets[currentSound].envelope.sustain,
-            release: soundPresets[currentSound].envelope.release * 1.5
-          },
-          portamento: 0.02
+      // Gesture-based articulation for chords
+      let articulation = 'arco-legato'; // Default for chords
+      if (currentPinchDistance < MIN_PINCH_DIST * 2) {
+        // Pinched = pizzicato or staccato
+        if (currentRealInstrument === 'realCello') {
+          articulation = Math.random() > 0.6 ? 'pizz-normal' : 'arco-staccato';
         }
-      });
-      harmonySynth.connect(filter);
-      harmonySynth.volume.value = leftHandVolume;
-      // 3. Play the new chord with minimal delay using Tone.now()
-      harmonySynth.triggerAttack(chord.notes, Tone.now(), 0.6);
-      currentChord = chord;
-      lastChord = {...chord};
-      chordChangeTime = Date.now() * 0.001;
-    //   console.log("Changed chord to:", chord.name, chord.notes);
+      } else if (currentPinchDistance > MAX_PINCH_DIST * 0.7) {
+        // Open hand = smooth sustained chords
+        if (currentRealInstrument === 'realCello') {
+          articulation = 'arco-legato';
+        } else if (currentRealInstrument === 'realFlute') {
+          articulation = 'legato';
+        }
+      }
+      
+      // Calculate hand speed for chord articulation
+      if (handPosition && lastHandPositions.left) {
+        const distance = Math.sqrt(
+          Math.pow(handPosition.x - lastHandPositions.left.x, 2) + 
+          Math.pow(handPosition.y - lastHandPositions.left.y, 2)
+        );
+        const leftHandSpeed = distance;
+        
+        // Fast movements = more aggressive chord attacks
+        if (leftHandSpeed > 0.03 && currentRealInstrument === 'realCello') {
+          articulation = 'arco-detache';
+        }
+      }
+      
+      if (handPosition) lastHandPositions.left = { ...handPosition };
+      
+      if (!leftHandIsPlaying) {
+        // First-time playing
+        playRealChord(currentRealInstrument, chord.notes, adjustedVelocity, null, dynamic, articulation);
+        leftHandIsPlaying = true;
+        currentChord = chord;
+        lastChord = {...chord}; // Make a copy to prevent reference issues
+        
+        // Trigger animation effects for new chord
+        chordChangeTime = Date.now() * 0.001;
+        
+        console.log(`Playing ${chord.name} chord with ${dynamic} ${articulation} (pinch: ${currentPinchDistance.toFixed(3)})`);
+        
+      } else if (chordChanged) {
+        // Stop current chord and play new one with gesture-based parameters
+        stopRealChord(currentRealInstrument, lastChord ? lastChord.notes : null);
+        setTimeout(() => {
+          playRealChord(currentRealInstrument, chord.notes, adjustedVelocity, null, dynamic, articulation);
+          currentChord = chord;
+          lastChord = {...chord};
+          chordChangeTime = Date.now() * 0.001;
+          
+          console.log(`Changed to ${chord.name} chord with ${dynamic} ${articulation} (pinch: ${currentPinchDistance.toFixed(3)})`);
+        }, 30);
+      }
+    } else {
+      // Use synthetic instrument
+      if (!harmonySynth) return;
+      
+      if (!leftHandIsPlaying) {
+        // First-time playing
+        harmonySynth.triggerAttack(chord.notes, Tone.now(), 0.6);  // Reduced velocity for softer attack
+        leftHandIsPlaying = true;
+        currentChord = chord;
+        lastChord = {...chord}; // Make a copy to prevent reference issues
+        
+        // Trigger animation effects for new chord
+        chordChangeTime = Date.now() * 0.001;
+        
+      } else if (chordChanged) {
+        // CRITICAL FIX: Using proper sequence to eliminate distortion
+        
+        // 1. Release all current notes in the past to ensure clean release
+        harmonySynth.releaseAll(Tone.now() - 0.005);
+        
+        // 2. Dispose of the synth and recreate it only if necessary
+        if (harmonySynth && harmonySynth.dispose) {
+            harmonySynth.dispose();
+        }
+        const currentSound = getSelectedSound();
+        const preset = soundPresets[currentSound];
+        harmonySynth = new Tone.PolySynth({
+          maxPolyphony: 8,
+          voice: Tone.Synth,
+          options: {
+            oscillator: {
+              type: preset.oscillator ? preset.oscillator.type : 'sine',
+              modulationType: "sine"
+            },
+            envelope: {
+              attack: preset.envelope.attack * 1.2,
+              decay: preset.envelope.decay,
+              sustain: preset.envelope.sustain,
+              release: preset.envelope.release * 1.5
+            },
+            portamento: 0.02
+          }
+        });
+        harmonySynth.connect(inputGain);
+        harmonySynth.volume.value = leftHandVolume;
+        // 3. Play the new chord with minimal delay using Tone.now()
+        harmonySynth.triggerAttack(chord.notes, Tone.now(), 0.6);
+        currentChord = chord;
+        lastChord = {...chord};
+        chordChangeTime = Date.now() * 0.001;
+      }
     }
     
     updateNoteDisplay();
@@ -374,8 +599,12 @@ function playChord(chord) {
 
 // Stop melody
 function stopMelody() {
-  if (rightHandIsPlaying && melodySynth) {
-    melodySynth.triggerRelease();
+  if (rightHandIsPlaying) {
+    if (currentInstrumentType === 'real' && currentRealInstrument) {
+      stopRealNote(currentRealInstrument, currentMelodyNote);
+    } else if (melodySynth) {
+      melodySynth.triggerRelease();
+    }
     rightHandIsPlaying = false;
     currentMelodyNote = null;
     updateNoteDisplay();
@@ -385,41 +614,46 @@ function stopMelody() {
 
 // Stop chord - FIXED to ensure chords actually stop
 function stopChord() {
-  if (leftHandIsPlaying && harmonySynth) {
-    // Use releaseAll instead of triggerRelease for PolySynth
-    harmonySynth.releaseAll();
-    
-    // More aggressive approach to ensure sound stops
-    setTimeout(() => {
-      // If sound is still playing, rebuild the synth
-      if (leftHandIsPlaying && harmonySynth) {
-        harmonySynth.dispose();
-        
-        // Recreate harmony synth with same settings
-        const currentSound = getSelectedSound();
-        harmonySynth = new Tone.PolySynth({
-          maxPolyphony: 8,
-          voice: Tone.Synth,
-          options: {
-            oscillator: {
-              type: soundPresets[currentSound].oscillator.type,
-              modulationType: "sine"
-            },
-            envelope: {
-              attack: soundPresets[currentSound].envelope.attack * 1.2,
-              decay: soundPresets[currentSound].envelope.decay,
-              sustain: soundPresets[currentSound].envelope.sustain,
-              release: soundPresets[currentSound].envelope.release * 1.5
-            },
-            portamento: 0.02
-          }
-        });
-        
-        // Reconnect to audio chain
-        harmonySynth.connect(filter);
-        harmonySynth.volume.value = leftHandVolume;
-      }
-    }, 100);
+  if (leftHandIsPlaying) {
+    if (currentInstrumentType === 'real' && currentRealInstrument) {
+      stopRealChord(currentRealInstrument, currentChord ? currentChord.notes : null);
+    } else if (harmonySynth) {
+      // Use releaseAll instead of triggerRelease for PolySynth
+      harmonySynth.releaseAll();
+      
+      // More aggressive approach to ensure sound stops
+      setTimeout(() => {
+        // If sound is still playing, rebuild the synth
+        if (leftHandIsPlaying && harmonySynth) {
+          harmonySynth.dispose();
+          
+          // Recreate harmony synth with same settings
+          const currentSound = getSelectedSound();
+          const preset = soundPresets[currentSound];
+          harmonySynth = new Tone.PolySynth({
+            maxPolyphony: 8,
+            voice: Tone.Synth,
+            options: {
+              oscillator: {
+                type: preset.oscillator ? preset.oscillator.type : 'sine',
+                modulationType: "sine"
+              },
+              envelope: {
+                attack: preset.envelope.attack * 1.2,
+                decay: preset.envelope.decay,
+                sustain: preset.envelope.sustain,
+                release: preset.envelope.release * 1.5
+              },
+              portamento: 0.02
+            }
+          });
+          
+          // Reconnect to audio chain
+          harmonySynth.connect(inputGain);
+          harmonySynth.volume.value = leftHandVolume;
+        }
+      }, 100);
+    }
     
     leftHandIsPlaying = false;
     currentChord = null;
@@ -432,24 +666,73 @@ function stopChord() {
 function setVolume(hand, distanceFromCenter, pinchDistance) {
   if (!window.audioStarted) return; // Only adjust volume if audio is started
 
+  // Update gesture parameters for real instruments
+  if (pinchDistance !== undefined && pinchDistance !== null) {
+    currentPinchDistance = pinchDistance;
+  }
+
   // Map distance from center to volume (center = soft, edges = loud)
   const volume = mapRange(distanceFromCenter, 0, 0.5, -30, 5);
 
   // Set volume for the appropriate hand
   if (hand === 'left') {
     leftHandVolume = volume;
-    if (harmonySynth) {
+    if (currentInstrumentType === 'real' && currentRealInstrument) {
+      // For real instruments, we'll use volume changes to affect velocity in note triggering
+      // The actual volume control happens during note playing
+      setRealInstrumentVolume(currentRealInstrument, volume);
+    } else if (harmonySynth) {
       harmonySynth.volume.value = volume;
     }
   } else {
     rightHandVolume = volume;
-    if (melodySynth) {
+    if (currentInstrumentType === 'real' && currentRealInstrument) {
+      // For real instruments, we'll use volume changes to affect velocity in note triggering
+      // The actual volume control happens during note playing  
+      setRealInstrumentVolume(currentRealInstrument, volume);
+    } else if (melodySynth) {
       melodySynth.volume.value = volume;
     }
   }
 
   // Control effects with pinch distance (with throttling to prevent noise)
   setEffects(pinchDistance);
+}
+
+// New function to update gesture parameters for real instrument expression
+function updateGestureParameters(handType, handPosition, pinchDistance, fingerPositions = null) {
+  if (!window.audioStarted || currentInstrumentType !== 'real') return;
+  
+  // Update pinch distance
+  if (pinchDistance !== undefined && pinchDistance !== null) {
+    currentPinchDistance = pinchDistance;
+  }
+  
+  // Update hand position for speed calculation
+  if (handPosition) {
+    if (handType === 'left') {
+      if (lastHandPositions.left) {
+        const distance = Math.sqrt(
+          Math.pow(handPosition.x - lastHandPositions.left.x, 2) + 
+          Math.pow(handPosition.y - lastHandPositions.left.y, 2)
+        );
+        currentHandSpeed = Math.max(currentHandSpeed * 0.8, distance); // Smooth speed tracking
+      }
+      lastHandPositions.left = { ...handPosition };
+    } else {
+      if (lastHandPositions.right) {
+        const distance = Math.sqrt(
+          Math.pow(handPosition.x - lastHandPositions.right.x, 2) + 
+          Math.pow(handPosition.y - lastHandPositions.right.y, 2)
+        );
+        currentHandSpeed = Math.max(currentHandSpeed * 0.8, distance); // Smooth speed tracking
+      }
+      lastHandPositions.right = { ...handPosition };
+    }
+  }
+  
+  // Additional gesture-based controls can be added here
+  // For example, finger positions could control tremolo, vibrato, etc.
 }
 
 // Set reverb and delay effects based on pinch distance with sensitivity control
@@ -727,6 +1010,7 @@ export {
   stopChord,
   setVolume,
   setEffects,
+  updateGestureParameters,
   // Basic effects
   setReverbAmountManual,
   setDelayAmountManual,
@@ -781,5 +1065,10 @@ export {
   currentMelodyNote,
   currentChord,
   noteChangeTime,
-  chordChangeTime
+  chordChangeTime,
+  // Real instrument state
+  currentInstrumentType,
+  currentRealInstrument,
+  currentPinchDistance,
+  currentHandSpeed
 };

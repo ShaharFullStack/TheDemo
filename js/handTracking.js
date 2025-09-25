@@ -5,7 +5,7 @@
 
 import { calculateDistance, showMessage } from './utils.js';
 import { getNoteFromPosition, getChordFromPosition } from './musicTheory.js';
-import { playMelodyNote, playChord, stopMelody, stopChord, setVolume } from './audio.js';
+import { playMelodyNote, playChord, stopMelody, stopChord, setVolume, updateGestureParameters } from './audio.js';
 import { updateTrackingStatus } from './controlPanel.js';
 
 // Hand tracking variables
@@ -202,13 +202,16 @@ function onHandResults(results) {
                         const distanceFromCenter = Math.abs(wrist.x - 0.5);
                         setVolume('left', distanceFromCenter, pinchDist);
 
+                        // Update gesture parameters for real instrument responsiveness
+                        updateGestureParameters(pinchDist, wrist, 'left');
+
                         // Get chord based on hand height
                         const chord = getChordFromPosition(wrist.y);
 
                         // Only try to play if window.audioStarted is true
                         if (window.audioStarted) {
-                            // Playing or not based on hand presence
-                            playChord(chord);
+                            // Playing or not based on hand presence - pass gesture data
+                            playChord(chord, wrist, pinchDist);
                         }
 
                         // Update chord visualizer
@@ -282,13 +285,16 @@ function onHandResults(results) {
                         const distanceFromCenter = Math.abs(wrist.x - 0.5);
                         setVolume('right', distanceFromCenter, pinchDist);
 
+                        // Update gesture parameters for real instrument responsiveness
+                        updateGestureParameters(pinchDist, wrist, 'right');
+
                         // Get melody note based on hand height
                         const note = getNoteFromPosition(wrist.y, 'major');
 
                         // Only try to play if window.audioStarted is true
                         if (window.audioStarted) {
-                            // Play the note
-                            playMelodyNote(note);
+                            // Play the note - pass gesture data
+                            playMelodyNote(note, wrist, pinchDist);
                         }
 
                         // Draw note name above hand - simplified on low-performance devices

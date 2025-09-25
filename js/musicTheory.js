@@ -42,25 +42,63 @@ const chordTypes = {
 
 // Update sound presets with optimized settings to reduce distortion
 const soundPresets = {
+  // Synthetic instruments (Tone.js)
   synth: {
+    type: 'synthetic',
     oscillator: { type: 'sine' },
     envelope: { attack: 0.05, decay: 0.2, sustain: 0.6, release: 0.8 }
   },
   bell: {
+    type: 'synthetic',
     oscillator: { type: 'sine4' },
     envelope: { attack: 0.01, decay: 0.3, sustain: 0.2, release: 1.5 }
   },
   pad: {
+    type: 'synthetic',
     oscillator: { type: 'sine8' },
     envelope: { attack: 0.4, decay: 0.7, sustain: 0.6, release: 2 }
   },
   pluck: {
+    type: 'synthetic',
     oscillator: { type: 'triangle' },
     envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.3 }
   },
   piano: {
+    type: 'synthetic',
     oscillator: { type: 'sawtooth' },
     envelope: { attack: 0.001, decay: 0.05, sustain: 0.7, release: 0.3 }
+  },
+  
+  // Real instruments (sampled)
+  realPiano: {
+    type: 'real',
+    name: 'Grand Piano',
+    envelope: { attack: 0.001, decay: 0.1, sustain: 0.8, release: 0.5 }
+  },
+  realGuitar: {
+    type: 'real',
+    name: 'Acoustic Guitar',
+    envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 1.0 }
+  },
+  realViolin: {
+    type: 'real',
+    name: 'Violin',
+    envelope: { attack: 0.1, decay: 0.3, sustain: 0.8, release: 0.8 }
+  },
+  realFlute: {
+    type: 'real',
+    name: 'Flute',
+    envelope: { attack: 0.05, decay: 0.2, sustain: 0.7, release: 0.6 }
+  },
+  realSaxophone: {
+    type: 'real',
+    name: 'Saxophone',
+    envelope: { attack: 0.03, decay: 0.2, sustain: 0.8, release: 0.5 }
+  },
+  realCello: {
+    type: 'real',
+    name: 'Cello',
+    envelope: { attack: 0.08, decay: 0.3, sustain: 0.9, release: 1.0 }
   }
 };
 
