@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HandSynth</title>
+    <link rel="icon" href="public/favicon.ico" type="icon/ico" sizes="16x16" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <!-- Container and background elements -->
+    <div id="container"></div>
+    <!-- Title container -->
+    <div class="title-container">
+    </div>
+
+    <!-- Video and canvas elements for MediaPipe -->
+    <video class="input_video"></video>
+    <canvas class="output_canvas" width="1420" height="772"></canvas>
+    <canvas class="output_canvas_overlay" width="1420" height="772"></canvas>
+
+    <!-- Note position markers -->
+
+    <!-- Preloader -->
+    <div class="preloader">
+      <div class="preloader__spinner"></div>
+    </div>
+
+    <!-- Core libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Tone.js for audio synthesis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <!-- MediaPipe Hand Tracking -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- Include modular JavaScript files -->
+    <script type="module" src="js/app.js"></script>
+
+    <!-- Script to hide preloader once everything is loaded -->
+    <script>
+      window.addEventListener("load", function () {
+        // Add small delay to ensure everything is truly ready
+        setTimeout(function () {
+          const preloader = document.querySelector(".preloader");
+          if (preloader) {
+            preloader.style.opacity = "0";
+            setTimeout(function () {
+              preloader.style.display = "none";
+            }, 300);
+          }
+        }, 500);
+      });
+    </script>
+  </body>
+</html>
