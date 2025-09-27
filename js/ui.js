@@ -25,79 +25,168 @@ let currentChord = null;
 let leftHandIsPlaying = false;
 let rightHandIsPlaying = false;
 
-// Create UI elements for scale and sound selection
+// Create modern header menu with dropdown controls
 function createUI() {
     const uiContainer = document.createElement('div');
     uiContainer.className = 'ui-container';
     document.body.appendChild(uiContainer);
 
-    // Root note selector
-    const rootSelector = document.createElement('select');
-    rootSelector.className = 'ui-select';
-    rootSelector.id = 'root-select';
+    // Create left side controls
+    const leftControls = document.createElement('div');
+    leftControls.style.display = 'flex';
+    leftControls.style.gap = '20px';
 
-    notes.forEach(note => {
-        const option = document.createElement('option');
-        option.value = note;
-        option.textContent = note;
-        rootSelector.appendChild(option);
-    });
+    // Create right side controls
+    const rightControls = document.createElement('div');
+    rightControls.style.display = 'flex';
+    rightControls.style.gap = '15px';
+    rightControls.style.alignItems = 'center';
 
-    // Scale selector
-    const scaleSelector = document.createElement('select');
-    scaleSelector.className = 'ui-select';
-    scaleSelector.id = 'scale-select';
-
-    Object.keys(scales).forEach(scale => {
-        const option = document.createElement('option');
-        option.value = scale;
-        option.textContent = scale.charAt(0).toUpperCase() + scale.slice(1);
-        scaleSelector.appendChild(option);
-    });
-
-    // Sound selector
-    const soundSelector = document.createElement('select');
-    soundSelector.className = 'ui-select';
-    soundSelector.id = 'sound-select';
-
-    Object.keys(soundPresets).forEach(sound => {
-        const option = document.createElement('option');
-        option.value = sound;
-        option.textContent = sound.charAt(0).toUpperCase() + sound.slice(1);
-        if (sound === getSelectedSound()) option.selected = true;
-        soundSelector.appendChild(option);
-    });
-
-    // Octave selector
-    const octaveSelector = document.createElement('select');
-    octaveSelector.className = 'ui-select';
-    octaveSelector.id = 'octave-select';
-
-    for (let i = 2; i <= 6; i++) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = `Octave ${i}`;
-        if (i === 4) option.selected = true;
-        octaveSelector.appendChild(option);
-    }
-
-    // Create labels and add everything to UI container
-    const createLabeledControl = (label, element) => {
+    // Helper function to create dropdown
+    const createDropdown = (label, options, selectedValue, onChange) => {
         const container = document.createElement('div');
         container.className = 'ui-control';
 
-        const labelEl = document.createElement('label');
-        labelEl.textContent = label;
+        const trigger = document.createElement('div');
+        trigger.className = 'dropdown-trigger';
 
-        container.appendChild(labelEl);
-        container.appendChild(element);
+        const currentText = document.createElement('span');
+        currentText.textContent = selectedValue || options[0];
+
+        const arrow = document.createElement('span');
+        arrow.className = 'dropdown-arrow';
+        arrow.textContent = '▼';
+
+        trigger.appendChild(currentText);
+        trigger.appendChild(arrow);
+
+        const menu = document.createElement('div');
+        menu.className = 'dropdown-menu';
+
+        options.forEach(option => {
+            const item = document.createElement('div');
+            item.className = 'dropdown-item';
+            item.textContent = option;
+
+            if (option === selectedValue) {
+                item.classList.add('selected');
+            }
+
+            item.addEventListener('click', () => {
+                // Remove selected from all items
+                menu.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('selected'));
+                // Add selected to clicked item
+                item.classList.add('selected');
+                // Update trigger text
+                currentText.textContent = option;
+                // Close dropdown
+                closeAllDropdowns();
+                // Call onChange callback
+                onChange(option);
+            });
+
+            menu.appendChild(item);
+        });
+
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeAllDropdowns();
+            trigger.classList.toggle('active');
+            menu.classList.toggle('open');
+        });
+
+        container.appendChild(trigger);
+        container.appendChild(menu);
+
         return container;
     };
 
-    uiContainer.appendChild(createLabeledControl('Root Note:', rootSelector));
-    uiContainer.appendChild(createLabeledControl('Scale:', scaleSelector));
-    uiContainer.appendChild(createLabeledControl('Octave:', octaveSelector));
-    uiContainer.appendChild(createLabeledControl('Sound:', soundSelector));
+    // Close all dropdowns function
+    const closeAllDropdowns = () => {
+        document.querySelectorAll('.dropdown-trigger').forEach(trigger => {
+            trigger.classList.remove('active');
+        });
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.classList.remove('open');
+        });
+    };
+
+    // Click outside to close dropdowns
+    document.addEventListener('click', closeAllDropdowns);
+
+    // Root note dropdown
+    const rootDropdown = createDropdown(
+        'Root Note',
+        notes,
+        selectedRoot,
+        (value) => {
+            updateMusicParameters(null, value, null, null);
+            updateUI();
+        }
+    );
+
+    // Scale dropdown
+    const scaleDropdown = createDropdown(
+        'Scale',
+        Object.keys(scales).map(scale => scale.charAt(0).toUpperCase() + scale.slice(1)),
+        selectedScale.charAt(0).toUpperCase() + selectedScale.slice(1),
+        (value) => {
+            updateMusicParameters(value.toLowerCase(), null, null, null);
+            updateUI();
+        }
+    );
+
+    // Octave dropdown
+    const octaveOptions = [];
+    for (let i = 2; i <= 6; i++) {
+        octaveOptions.push(`Octave ${i}`);
+    }
+    const octaveDropdown = createDropdown(
+        'Octave',
+        octaveOptions,
+        `Octave ${octave}`,
+        (value) => {
+            const octaveNum = parseInt(value.split(' ')[1]);
+            updateMusicParameters(null, null, octaveNum, null);
+            updateUI();
+        }
+    );
+
+    // Sound dropdown
+    const soundDropdown = createDropdown(
+        'Sound',
+        Object.keys(soundPresets).map(sound => sound.charAt(0).toUpperCase() + sound.slice(1)),
+        getSelectedSound().charAt(0).toUpperCase() + getSelectedSound().slice(1),
+        (value) => {
+            const selectedValue = value.toLowerCase();
+            console.log(`Header UI: Sound changed to ${selectedValue}`);
+
+            // Reset knobs to defaults when switching to built-in instruments
+            resetKnobsToDefaults();
+
+            updateMusicParameters(null, null, null, selectedValue);
+            updateSynths();
+
+            // Sync with control panel if it exists
+            const panelSoundSelect = document.getElementById('panel-sound-select');
+            if (panelSoundSelect) {
+                panelSoundSelect.value = `builtin:${selectedValue}`;
+                console.log(`Synced control panel to: builtin:${selectedValue}`);
+            }
+
+            showMessage(`Sound changed to ${selectedValue}`);
+        }
+    );
+
+    // Sound Control Panel toggle button
+    const controlToggle = document.createElement('button');
+    controlToggle.id = 'control-panel-toggle';
+    controlToggle.className = 'control-toggle';
+    controlToggle.innerHTML = `
+        <span class="toggle-icon">⚙️</span>
+        <span class="toggle-text">Sound Controls</span>
+    `;
+    controlToggle.title = 'Toggle Sound Control Panel';
 
     // Performance panel toggle button
     const perfButton = document.createElement('button');
@@ -109,43 +198,19 @@ function createUI() {
             module.feedbackPanel.toggle();
         });
     });
-    uiContainer.appendChild(perfButton);
 
-    // Add event listeners after creating the elements
-    rootSelector.addEventListener('change', function () {
-        updateMusicParameters(null, this.value, null, null);
-        updateUI();
-    });
+    // Add controls to containers
+    leftControls.appendChild(rootDropdown);
+    leftControls.appendChild(scaleDropdown);
+    leftControls.appendChild(octaveDropdown);
+    leftControls.appendChild(soundDropdown);
 
-    scaleSelector.addEventListener('change', function () {
-        updateMusicParameters(this.value, null, null, null);
-        updateUI();
-    });
+    rightControls.appendChild(controlToggle);
+    rightControls.appendChild(perfButton);
 
-    octaveSelector.addEventListener('change', function () {
-        updateMusicParameters(null, null, parseInt(this.value), null);
-        updateUI();
-    });
-
-    soundSelector.addEventListener('change', function () {
-        const selectedValue = this.value;
-        console.log(`Main UI: Sound changed to ${selectedValue}`);
-        
-        // Reset knobs to defaults when switching to built-in instruments
-        resetKnobsToDefaults();
-
-        updateMusicParameters(null, null, null, selectedValue);
-        updateSynths();
-
-        // Sync with control panel if it exists
-        const panelSoundSelect = document.getElementById('panel-sound-select');
-        if (panelSoundSelect) {
-            panelSoundSelect.value = `builtin:${selectedValue}`;
-            console.log(`Synced control panel to: builtin:${selectedValue}`);
-        }
-        
-        showMessage(`Sound changed to ${selectedValue}`);
-    });
+    // Add containers to main UI
+    uiContainer.appendChild(leftControls);
+    uiContainer.appendChild(rightControls);
 
     // Display initial instructions
     createInstructionsPanel();
