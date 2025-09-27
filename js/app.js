@@ -9,9 +9,28 @@ import { setupHandTracking, setupWebcamElements } from './handTracking.js';
 import { createUI, updateUI } from './ui.js';
 import { initControlPanel, setupMasterVolumeConnection, updateAudioStatus, updateTrackingStatus } from './controlPanel.js';
 import { showMessage } from './utils.js';
+import { performanceMonitor } from './performanceMonitor.js';
 
 // Initialize global audioStarted state
 window.audioStarted = false;
+
+// Global performance tracking for overall app
+let globalAnimationFrameId = null;
+
+function startGlobalPerformanceTracking() {
+  function trackFrame() {
+    performanceMonitor.recordFrame();
+    globalAnimationFrameId = requestAnimationFrame(trackFrame);
+  }
+  trackFrame();
+}
+
+function stopGlobalPerformanceTracking() {
+  if (globalAnimationFrameId) {
+    cancelAnimationFrame(globalAnimationFrameId);
+    globalAnimationFrameId = null;
+  }
+}
 
 // Initialize the application when the window loads
 window.addEventListener('load', init);
@@ -37,6 +56,9 @@ function init() {
 
   // Update status indicators
   updateTrackingStatus('initializing');
+
+  // Start global performance tracking
+  startGlobalPerformanceTracking();
   
   // Wait for Tone.js to be ready before adding the button
   if (typeof Tone !== 'undefined') {

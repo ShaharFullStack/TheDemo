@@ -7,6 +7,7 @@ import { calculateDistance, showMessage } from './utils.js';
 import { getNoteFromPosition, getChordFromPosition } from './musicTheory.js';
 import { playMelodyNote, playChord, stopMelody, stopChord, setVolume, updateGestureParameters } from './audio.js';
 import { updateTrackingStatus } from './controlPanel.js';
+import { performanceMonitor } from './performanceMonitor.js';
 
 // Hand tracking variables
 let hands;
@@ -23,6 +24,11 @@ let lastProcessTime = 0;
 const THROTTLE_INTERVAL = 16; // ms (approximately 60fps)
 let processingFrame = false;
 let lastRenderTime = 0;
+
+// Performance tracking variables
+let handTrackingFrameCount = 0;
+let handTrackingLastSecond = performance.now();
+let handTrackingStartTime = performance.now();
 
 // Detect if we're on a low-performance device
 function detectPerformance() {
@@ -151,6 +157,25 @@ function onHandResults(results) {
         return; // Skip this render cycle
     }
     lastRenderTime = now;
+
+    // Record frame for performance monitoring
+    performanceMonitor.recordFrame();
+
+    // Track hand tracking FPS
+    handTrackingFrameCount++;
+    if (now - handTrackingLastSecond >= 1000) {
+        const handTrackingFPS = Math.round((handTrackingFrameCount * 1000) / (now - handTrackingLastSecond));
+        const latency = Math.round(now - handTrackingStartTime);
+        const confidence = results.multiHandedness && results.multiHandedness.length > 0
+            ? results.multiHandedness[0].score
+            : 0;
+
+        performanceMonitor.updateHandTrackingMetrics(handTrackingFPS, latency, confidence);
+
+        handTrackingFrameCount = 0;
+        handTrackingLastSecond = now;
+    }
+    handTrackingStartTime = now;
 
     // Display a message if hands are detected
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {

@@ -11,17 +11,17 @@ const REAL_INSTRUMENT_BOOST_DB = 20; // Moderate boost for audible real instrume
 
 // Sample library configuration with Philharmonia Orchestra samples
 const SAMPLE_LIBRARY = {
-  realPiano: {
-    name: 'Grand Piano',
-    type: 'real',
-    baseUrl: './audio/piano/',
-    samples: {
-      'C2': 'C2.mp3', 'C3': 'C3.mp3', 'C4': 'C4.mp3', 'C5': 'C5.mp3', 'C6': 'C6.mp3'
-    },
-    baseNote: 'C4',
-    range: { min: 'C2', max: 'C7' },
-    articulations: ['normal']
-  },
+  // realPiano: {
+  //   name: 'Grand Piano',
+  //   type: 'real',
+  //   baseUrl: './audio/piano/',
+  //   samples: {
+  //     'C2': 'C2.mp3', 'C3': 'C3.mp3', 'C4': 'C4.mp3', 'C5': 'C5.mp3', 'C6': 'C6.mp3'
+  //   },
+  //   baseNote: 'C4',
+  //   range: { min: 'C2', max: 'C7' },
+  //   articulations: ['normal']
+  // },
   realGuitar: {
     name: 'Acoustic Guitar',
     type: 'real',
@@ -130,17 +130,17 @@ const SAMPLE_LIBRARY = {
     articulations: ['normal', 'harmonics', 'soft'],
     dynamics: ['pianissimo', 'piano', 'forte']
   },
-  realViolin: {
-    name: 'Violin',
-    type: 'real',
-    baseUrl: './audio/violin/',
-    samples: {
-      'G3': 'G3.mp3', 'D4': 'D4.mp3', 'A4': 'A4.mp3', 'E5': 'E5.mp3'
-    },
-    baseNote: 'A4',
-    range: { min: 'G3', max: 'E7' },
-    articulations: ['normal']
-  },
+  // realViolin: {
+  //   name: 'Violin',
+  //   type: 'real',
+  //   baseUrl: './audio/violin/',
+  //   samples: {
+  //     'G3': 'G3.mp3', 'D4': 'D4.mp3', 'A4': 'A4.mp3', 'E5': 'E5.mp3'
+  //   },
+  //   baseNote: 'A4',
+  //   range: { min: 'G3', max: 'E7' },
+  //   articulations: ['normal']
+  // },
   realFlute: {
     name: 'Concert Flute',
     type: 'real',
@@ -169,9 +169,6 @@ const SAMPLE_LIBRARY = {
       'B6': 'flute_B6_1_mezzo-forte_normal.mp3',
       'C7': 'flute_C7_1_mezzo-forte_normal.mp3',
       'D7': 'flute_D7_1_mezzo-forte_normal.mp3',
-      'E7': 'flute_E7_1_mezzo-forte_normal.mp3',
-      'F7': 'flute_F7_1_mezzo-forte_normal.mp3',
-      'G7': 'flute_G7_1_mezzo-forte_normal.mp3'
     },
     chromaticSamples: {
       // Add additional chromatic samples for better pitch coverage
@@ -192,7 +189,7 @@ const SAMPLE_LIBRARY = {
       'A#6': 'flute_As6_1_mezzo-forte_normal.mp3'
     },
     baseNote: 'A4',
-    range: { min: 'C4', max: 'G7' },
+    range: { min: 'C4', max: 'D7' },
     articulations: ['normal', 'staccato'],
     dynamics: ['pianissimo', 'piano', 'mezzo-piano', 'mezzo-forte', 'forte', 'fortissimo']
   },
@@ -203,14 +200,10 @@ const SAMPLE_LIBRARY = {
     samples: {
       'C2': 'cello_C2_1_mezzo-piano_arco-normal.mp3',
       'D2': 'cello_D2_1_mezzo-piano_arco-normal.mp3',
-      'E2': 'cello_E2_1_mezzo-piano_arco-normal.mp3',
-      'F2': 'cello_F2_1_mezzo-piano_arco-normal.mp3',
       'G2': 'cello_G2_1_mezzo-piano_arco-normal.mp3',
       'A2': 'cello_A2_1_mezzo-piano_arco-normal.mp3',
-      'B2': 'cello_B2_1_mezzo-piano_arco-normal.mp3',
       'C3': 'cello_C3_1_mezzo-piano_arco-normal.mp3',
       'D3': 'cello_D3_1_mezzo-piano_arco-normal.mp3',
-      'E3': 'cello_E3_1_mezzo-piano_arco-normal.mp3',
       'F3': 'cello_F3_1_mezzo-piano_arco-normal.mp3',
       'G3': 'cello_G3_1_mezzo-piano_arco-normal.mp3',
       'A3': 'cello_A3_1_mezzo-piano_arco-normal.mp3',
@@ -229,23 +222,12 @@ const SAMPLE_LIBRARY = {
       'G5': 'cello_G5_1_mezzo-piano_arco-normal.mp3',
       'A5': 'cello_A5_1_mezzo-piano_arco-normal.mp3',
       'B5': 'cello_B5_1_mezzo-piano_arco-normal.mp3',
-      'C6': 'cello_C6_1_mezzo-piano_arco-normal.mp3',
-      'D6': 'cello_D6_1_mezzo-piano_arco-normal.mp3',
-      'E6': 'cello_E6_1_mezzo-piano_arco-normal.mp3',
-      'F6': 'cello_F6_1_mezzo-piano_arco-normal.mp3',
-      'G6': 'cello_G6_1_mezzo-piano_arco-normal.mp3',
-      'A6': 'cello_A6_1_mezzo-piano_arco-normal.mp3',
-      'B6': 'cello_B6_1_mezzo-piano_arco-normal.mp3',
-      'C7': 'cello_C7_1_mezzo-piano_arco-normal.mp3'
+      'C6': 'cello_C6_1_mezzo-piano_arco-normal.mp3'
     },
     chromaticSamples: {
       'C#2': 'cello_Cs2_1_mezzo-piano_arco-normal.mp3',
-      'D#2': 'cello_Ds2_1_mezzo-piano_arco-normal.mp3',
-      'F#2': 'cello_Fs2_1_mezzo-piano_arco-normal.mp3',
       'G#2': 'cello_Gs2_1_mezzo-piano_arco-normal.mp3',
       'A#2': 'cello_As2_1_mezzo-piano_arco-normal.mp3',
-      'C#3': 'cello_Cs3_1_mezzo-piano_arco-normal.mp3',
-      'D#3': 'cello_Ds3_1_mezzo-piano_arco-normal.mp3',
       'F#3': 'cello_Fs3_1_mezzo-piano_arco-normal.mp3',
       'G#3': 'cello_Gs3_1_mezzo-piano_arco-normal.mp3',
       'A#3': 'cello_As3_1_mezzo-piano_arco-normal.mp3',
@@ -255,24 +237,27 @@ const SAMPLE_LIBRARY = {
       'G#4': 'cello_Gs4_1_mezzo-piano_arco-normal.mp3',
       'A#4': 'cello_As4_1_mezzo-piano_arco-normal.mp3',
       'C#5': 'cello_Cs5_1_mezzo-piano_arco-normal.mp3',
-      'D#5': 'cello_Ds5_1_mezzo-piano_arco-normal.mp3'
+      'D#5': 'cello_Ds5_1_mezzo-piano_arco-normal.mp3',
+      'F#5': 'cello_Fs5_1_mezzo-piano_arco-normal.mp3',
+      'G#5': 'cello_Gs5_1_mezzo-piano_arco-normal.mp3',
+      'A#5': 'cello_As5_1_mezzo-piano_arco-normal.mp3'
     },
     baseNote: 'C4', // Cello C string
-    range: { min: 'C2', max: 'C7' },
+    range: { min: 'C2', max: 'C6' },
     articulations: ['arco-normal', 'arco-sul-ponticello', 'pizzicato'],
     dynamics: ['pianissimo', 'piano', 'mezzo-piano', 'mezzo-forte', 'forte', 'fortissimo']
   },
-  realSaxophone: {
-    name: 'Saxophone',
-    type: 'real',
-    baseUrl: './audio/saxophone/',
-    samples: {
-      'Bb3': 'Bb3.mp3', 'F4': 'F4.mp3', 'Bb4': 'Bb4.mp3', 'F5': 'F5.mp3'
-    },
-    baseNote: 'Bb4',
-    range: { min: 'Bb3', max: 'F6' },
-    articulations: ['normal']
-  }
+  // realSaxophone: {
+  //   name: 'Saxophone',
+  //   type: 'real',
+  //   baseUrl: './audio/saxophone/',
+  //   samples: {
+  //     'Bb3': 'Bb3.mp3', 'F4': 'F4.mp3', 'Bb4': 'Bb4.mp3', 'F5': 'F5.mp3'
+  //   },
+  //   baseNote: 'Bb4',
+  //   range: { min: 'Bb3', max: 'F6' },
+  //   articulations: ['normal']
+  // }
 };
 
 // Note to frequency mapping (A4 = 440Hz)

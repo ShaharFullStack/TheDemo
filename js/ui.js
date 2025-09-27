@@ -99,6 +99,18 @@ function createUI() {
     uiContainer.appendChild(createLabeledControl('Octave:', octaveSelector));
     uiContainer.appendChild(createLabeledControl('Sound:', soundSelector));
 
+    // Performance panel toggle button
+    const perfButton = document.createElement('button');
+    perfButton.className = 'ui-button performance-toggle';
+    perfButton.innerHTML = '📊 Performance';
+    perfButton.title = 'Toggle Performance Monitor (Ctrl+Shift+P)';
+    perfButton.addEventListener('click', () => {
+        import('./feedbackPanel.js').then(module => {
+            module.feedbackPanel.toggle();
+        });
+    });
+    uiContainer.appendChild(perfButton);
+
     // Add event listeners after creating the elements
     rootSelector.addEventListener('change', function () {
         updateMusicParameters(null, this.value, null, null);
