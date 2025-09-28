@@ -318,7 +318,7 @@ function onHandResults(results) {
                         updateGestureParameters(pinchDist, wrist, 'right');
 
                         // Get melody note based on hand height
-                        const note = getNoteFromPosition(wrist.y, 'major');
+                        const note = getNoteFromPosition(wrist.y);
 
                         // Only try to play if window.audioStarted is true
                         if (window.audioStarted) {
