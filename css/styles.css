@@ -894,7 +894,7 @@ body {
   top: 55%;
   right: 50%;
   transform: translate(50%, -50%) scaleX(1);
-  width: 90%;
+  width: 95%;
   max-width: 1420px;
   max-height: 90vh;
   z-index: var(--z-surface);
@@ -908,7 +908,7 @@ body {
   top: 55%;
   right: 50%;
   transform: translate(50%, -50%) scaleX(-1);
-  width: 90%;
+  width: 95%;
   max-width: 1420px;
   max-height: 90vh;
   z-index: var(--z-surface);
