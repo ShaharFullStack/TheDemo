@@ -194,6 +194,9 @@ function onHandResults(results) {
     rightHandLandmarks = null;
     handDetected = results.multiHandLandmarks && results.multiHandLandmarks.length > 0;
 
+    // Store text labels to draw after landmarks
+    const textLabels = [];
+
     // Drawing setup
     canvasCtx.save();
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
@@ -245,13 +248,14 @@ function onHandResults(results) {
                             chordViz.classList.add('chord-active');
                         }
 
-                        // Draw chord name above hand - simplified on low-performance devices
+                        // Store chord name to draw after landmarks - simplified on low-performance devices
                         if (!isLowPerformanceDevice) {
-                            canvasCtx.font = 'bold 24px Arial';
-                            canvasCtx.fillStyle = 'white';
-                            canvasCtx.fillText(chord.name,
-                                (wrist.x * canvasElement.width) - 15,
-                                (wrist.y * canvasElement.height) - 30);
+                            textLabels.push({
+                                text: chord.name,
+                                x: wrist.x * canvasElement.width,
+                                y: (wrist.y * canvasElement.height) - 30,
+                                color: 'white'
+                            });
                         }
 
                         // Visual feedback for volume (distance from center) and effects (pinch)
@@ -322,13 +326,14 @@ function onHandResults(results) {
                             playMelodyNote(note, wrist, pinchDist);
                         }
 
-                        // Draw note name above hand - simplified on low-performance devices
+                        // Store note name to draw after landmarks - simplified on low-performance devices
                         if (!isLowPerformanceDevice) {
-                            canvasCtx.font = 'bold 24px Arial';
-                            canvasCtx.fillStyle = 'magenta';
-                            canvasCtx.fillText(note,
-                                (wrist.x * canvasElement.width) - 15,
-                                (wrist.y * canvasElement.height) - 30);
+                            textLabels.push({
+                                text: note,
+                                x: wrist.x * canvasElement.width,
+                                y: (wrist.y * canvasElement.height) - 30,
+                                color: 'magenta'
+                            });
                         }
 
                         // Visual feedback for volume (distance from center) and effects (pinch)
@@ -391,6 +396,22 @@ function onHandResults(results) {
             const chordViz = document.querySelector('.chord-viz');
             if (chordViz) chordViz.classList.remove('chord-active');
         }
+
+        canvasCtx.restore();
+    }
+
+    // Draw all text labels on top of landmarks
+    if (textLabels.length > 0) {
+        canvasCtx.save();
+        canvasCtx.scale(-1, 1); // Flip horizontally to counter canvas mirror
+        canvasCtx.font = 'bold 24px Arial';
+
+        textLabels.forEach(label => {
+            canvasCtx.fillStyle = label.color;
+            canvasCtx.fillText(label.text,
+                -(label.x + 15), // Adjust x position for flipped canvas
+                label.y);
+        });
 
         canvasCtx.restore();
     }
